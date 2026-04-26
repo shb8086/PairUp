@@ -2,6 +2,8 @@
 
 Automatically schedules weekly 1:1 meetings between colleagues using a **round-robin rotation**. Each run pairs everyone up differently. Over a full cycle, every person meets every other person exactly once.
 
+<img src="img/webapp_ui.png" alt="Web app sign-up form" width="400"/>
+
 ---
 
 ## How the Rotation Works
