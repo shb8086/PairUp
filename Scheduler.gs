@@ -22,9 +22,12 @@ function scheduleMeetings() {
   const pairs      = allRounds[roundIndex];
   const roundLabel = `Round ${roundIndex + 1} of ${allRounds.length}`;
 
-  Logger.log(`${roundLabel} — ${pairs.length} pair(s)`);
+  // Only schedule cross-team pairs when both participants are cross-team open
+  const eligiblePairs = pairs.filter(([p1, p2]) => _isCrossTeamPairAllowed(p1, p2));
+  const skipped = pairs.length - eligiblePairs.length;
+  Logger.log(`${roundLabel} — ${eligiblePairs.length} pair(s)${skipped > 0 ? ` (${skipped} cross-team pair(s) skipped)` : ""}`);
 
-  const results = pairs.map(([p1, p2]) => {
+  const results = eligiblePairs.map(([p1, p2]) => {
     const status = schedulePair(p1, p2, roundIndex + 1);
     return `${p1.name} & ${p2.name}: ${status}`;
   });
@@ -135,6 +138,37 @@ function checkCancellationsAndReschedule() {
   const summary = results.join("\n");
   Logger.log("=== Cancellation Check ===\n" + summary);
   SpreadsheetApp.getActiveSpreadsheet().toast(summary, "Check Complete", 20);
+}
+
+/**
+ * Returns true if the pair is allowed to be scheduled.
+ * Same-team pairs (including both having no team) are always allowed.
+ * Cross-team pairs require BOTH participants to have crossTeamOpen = true.
+ *
+ * @param {Object} p1
+ * @param {Object} p2
+ * @returns {boolean}
+ */
+function _isCrossTeamPairAllowed(p1, p2) {
+  const t1 = (p1.team || "").trim().toLowerCase();
+  const t2 = (p2.team || "").trim().toLowerCase();
+  if (t1 === t2) return true;   // same team (or both unassigned): always allowed
+
+  // Cross-team: both must have the master toggle on
+  if (!p1.crossTeamOpen || !p2.crossTeamOpen) return false;
+
+  // Parse each person's target list (empty = open to all teams)
+  const targets1 = _parseTargets(p1.crossTeamTargets);
+  const targets2 = _parseTargets(p2.crossTeamTargets);
+
+  const p1acceptsP2 = targets1.length === 0 || targets1.includes(t2);
+  const p2acceptsP1 = targets2.length === 0 || targets2.includes(t1);
+  return p1acceptsP2 && p2acceptsP1;
+}
+
+function _parseTargets(raw) {
+  if (!raw) return [];
+  return String(raw).split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
 }
 
 /**
