@@ -31,13 +31,14 @@ Round 3: A & C,  D & B
 ├── Config.gs           — All configuration constants
 ├── Menu.gs             — Custom spreadsheet menu
 ├── Pairings.gs         — Round-robin algorithm + round state
-├── Scheduler.gs        — Main orchestration
+├── Scheduler.gs        — Main orchestration + cross-team pairing filter
 ├── CalendarService.gs  — Free/busy checks and event creation
-├── SheetService.gs     — Sheet reads, writes, and setup
+├── SheetService.gs     — Sheet reads, writes, and setup (Participants + Teams + Log)
 ├── Triggers.gs         — Time-based trigger management
 ├── Utils.gs            — Date/time helpers
-├── Webapp.gs           — Web app entry point + form handler
-└── webapp.html         — Self-service sign-up form
+├── Webapp.gs           — Web app routing + sign-up + dashboard server functions
+├── webapp.html         — Self-service sign-up form
+└── dashboard.html      — Personal dashboard (preferences, upcoming 1:1s, leave/rejoin)
 ```
 
 > All `.gs` files share the same global scope in Apps Script — no imports needed. Files are separated by responsibility only.
@@ -122,15 +123,35 @@ This creates the **Participants** and **Schedule Log** sheets.
 
 ---
 
+### Step 6.5 — Fill in the Teams sheet
+
+After setup, open the **Teams** tab and replace the example entries with your actual team names (one per row, column A). These populate the team dropdown in both web pages.
+
+---
+
 ### Step 7 — Add Colleagues (two ways)
 
 #### Option A — Web App (recommended, self-service)
 
+Two pages are served from the same deployment:
+
+| URL | Purpose |
+|---|---|
+| `<deployment-url>` | Sign-up form — join the rotation |
+| `<deployment-url>?page=dashboard` | Personal dashboard — view & edit preferences, see upcoming 1:1s |
+
 1. **Deploy → New deployment**
 2. Type: **Web app** | Execute as: **Me** | Access: **Anyone in your org**
-3. Copy the URL and share it with your team
+3. Share the sign-up URL with your team and the `?page=dashboard` URL for managing preferences
 
-Colleagues open the link, enter their name, email, preferred days, and time window. It writes directly to the Participants sheet.
+On the **sign-up form**, colleagues fill in their name, preferred days/times, team, and whether they're open to cross-team meetings.
+
+On the **dashboard**, they can:
+- View and edit all their preferences
+- See upcoming scheduled 1:1s (dates in Berlin time)
+- Leave the rotation (deactivate) or rejoin at any time
+
+> The dashboard uses Google login automatically — no password or email input needed.
 
 > After any code change: **Deploy → Manage deployments → Edit → New version → Deploy**
 
@@ -138,15 +159,17 @@ Colleagues open the link, enter their name, email, preferred days, and time wind
 
 Open the **Participants** tab and fill in rows:
 
-| Name | Email | Active | Preferred Days | Preferred Start Hour | Preferred End Hour |
-|---|---|---|---|---|---|
-| Alice | alice@co.com | ✅ | Mon,Tue,Wed,Thu,Fri | 10 | 16 |
-| Bob | bob@co.com | ✅ | Mon,Wed,Fri | 9 | 15 |
-| Carol | carol@co.com | ✅ | Tue,Thu | 10 | 17 |
+| Name | Email | Active | Preferred Days | Preferred Start Hour | Preferred End Hour | Team | Cross Team Open |
+|---|---|---|---|---|---|---|---|
+| Alice | alice@co.com | ✅ | Mon,Tue,Wed,Thu,Fri | 10 | 16 | Engineering | ☐ |
+| Bob | bob@co.com | ✅ | Mon,Wed,Fri | 9 | 15 | Product | ✅ |
+| Carol | carol@co.com | ✅ | Tue,Thu | 10 | 17 | Engineering | ✅ |
 
 - **Active**: uncheck to remove someone from the rotation without deleting them
 - **Preferred Days**: comma-separated abbreviations — `Mon`, `Tue`, `Wed`, `Thu`, `Fri`
 - **Preferred Start/End Hour**: 24-hour numbers (`10` = 10 AM, `16` = 4 PM)
+- **Team**: must match a name from the **Teams** sheet exactly
+- **Cross Team Open**: check to allow cross-team pairings (both people must have this checked)
 - If Preferred Days/Hours are blank, the global `CFG` defaults are used
 
 ---
