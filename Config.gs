@@ -28,6 +28,7 @@ const PARTICIPANT_COLS = {
   team:               7,
   crossTeamOpen:      8,
   crossTeamTargets:   9,  // comma-separated team names; empty string = open to all teams
+  timezone:           10, // IANA timezone string (e.g. "Europe/Berlin")
 };
 
 // Maps day abbreviations (used in the form and sheet) to JS getDay() values
