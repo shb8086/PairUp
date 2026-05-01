@@ -25,6 +25,10 @@ const PARTICIPANT_COLS = {
   preferredDays:      4,
   preferredStartHour: 5,
   preferredEndHour:   6,
+  team:               7,
+  crossTeamOpen:      8,
+  crossTeamTargets:   9,  // comma-separated team names; empty string = open to all teams
+  timezone:           10, // IANA timezone string (e.g. "Europe/Berlin")
 };
 
 // Maps day abbreviations (used in the form and sheet) to JS getDay() values

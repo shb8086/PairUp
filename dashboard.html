@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My 1:1 Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary:       #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-light: #eef2ff;
+      --primary-glow:  rgba(79, 70, 229, 0.18);
+      --success:       #059669;
+      --success-bg:    #ecfdf5;
+      --error:         #dc2626;
+      --error-bg:      #fef2f2;
+      --warn:          #d97706;
+      --warn-bg:       #fffbeb;
+      --text:          #111827;
+      --text-secondary:#6b7280;
+      --border:        #e5e7eb;
+      --border-focus:  #4f46e5;
+      --bg:            #f5f7ff;
+      --card-bg:       #ffffff;
+      --radius:        12px;
+      --radius-sm:     8px;
+      --shadow:        0 1px 3px rgba(0,0,0,.06), 0 8px 32px rgba(79,70,229,.08);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 1rem 3rem;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Hero ────────────────────────────────────────────── */
+    .hero {
+      width: 100%;
+      max-width: 520px;
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 55%, #4338ca 100%);
+      border-radius: 0 0 var(--radius) var(--radius);
+      padding: 2.5rem 2rem 2rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .hero-icon {
+      width: 52px; height: 52px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1rem;
+      backdrop-filter: blur(8px);
+      position: relative;
+    }
+
+    .hero-icon svg { width: 26px; height: 26px; }
+
+    .hero h1 {
+      font-size: 1.5rem; font-weight: 700; color: #fff;
+      letter-spacing: -0.02em; margin-bottom: 0.4rem; position: relative;
+    }
+
+    .hero p { font-size: 0.875rem; color: rgba(255,255,255,0.65); position: relative; }
+
+    /* ── Cards ───────────────────────────────────────────── */
+    .card {
+      width: 100%; max-width: 520px;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-size: 0.95rem; font-weight: 700; color: var(--text);
+      margin-bottom: 1.25rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+
+    .card-title svg { color: var(--primary); }
+
+    /* ── Loading ─────────────────────────────────────────── */
+    #loadingScreen {
+      width: 100%; max-width: 520px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 1rem; padding: 3rem 0; color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    .spinner-lg {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Not-found screen ────────────────────────────────── */
+    #notFoundScreen { display: none; }
+
+    .empty-hero {
+      text-align: center; padding: 1rem 0;
+    }
+
+    .empty-icon {
+      width: 64px; height: 64px;
+      background: var(--primary-light);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.25rem;
+    }
+
+    .empty-icon svg { color: var(--primary); width: 28px; height: 28px; }
+
+    .empty-hero h2 { font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
+    .empty-hero p { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem; }
+
+    /* ── Profile header ──────────────────────────────────── */
+    .profile-header {
+      display: flex; align-items: center; gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .avatar {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #fff; font-size: 1.15rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .profile-info { flex: 1; min-width: 0; }
+    .profile-name { font-size: 1rem; font-weight: 700; color: var(--text); }
+    .profile-email { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; word-break: break-all; }
+
+    .badge-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      font-size: 0.72rem; font-weight: 600;
+      padding: 0.2rem 0.55rem;
+      border-radius: 20px;
+    }
+
+    .badge-active  { background: var(--success-bg); color: var(--success); }
+    .badge-inactive { background: #f3f4f6; color: var(--text-secondary); }
+    .badge-team    { background: var(--primary-light); color: var(--primary); }
+    .badge-cross   { background: #f0fdf4; color: #16a34a; }
+
+    /* ── Banner ──────────────────────────────────────────── */
+    .banner {
+      width: 100%; max-width: 520px;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem; font-weight: 500;
+      display: flex; align-items: flex-start; gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .banner svg { flex-shrink: 0; margin-top: 1px; }
+    .banner-warn { background: var(--warn-bg); color: var(--warn); }
+
+    /* ── Form fields ─────────────────────────────────────── */
+    .field { margin-bottom: 1.25rem; }
+
+    .field-label {
+      display: flex; align-items: center; gap: 0.4rem;
+      font-size: 0.78rem; font-weight: 600; color: var(--text);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 0.45rem;
+    }
+
+    .field-label svg { color: var(--primary); flex-shrink: 0; }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: inherit; font-size: 0.95rem; color: var(--text);
+      background: #fafafa; outline: none;
+      transition: border-color .15s, box-shadow .15s, background .15s;
+      appearance: none; -webkit-appearance: none;
+    }
+
+    input:hover, select:hover { border-color: #c7d2fe; background: #fff; }
+    input:focus, select:focus {
+      border-color: var(--border-focus); background: #fff;
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '';
+      position: absolute; right: 0.9rem; top: 50%;
+      transform: translateY(-50%);
+      width: 0; height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid var(--text-secondary);
+      pointer-events: none;
+    }
+
+    /* ── Day buttons ─────────────────────────────────────── */
+    .days-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
+
+    .day-btn {
+      padding: 0.6rem 0 0.5rem; text-align: center;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      cursor: pointer; font-family: inherit; font-size: 0.8rem; font-weight: 600;
+      color: var(--text-secondary); background: #fafafa;
+      user-select: none; transition: all .15s; line-height: 1;
+    }
+
+    .day-btn .day-dot {
+      display: block; width: 5px; height: 5px; border-radius: 50%;
+      background: transparent; margin: 0.3rem auto 0; transition: background .15s;
+    }
+
+    .day-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+    .day-btn.on { background: var(--primary); border-color: var(--primary); color: #fff; box-shadow: 0 2px 8px var(--primary-glow); }
+    .day-btn.on .day-dot { background: rgba(255,255,255,0.5); }
+
+    /* ── Time row ────────────────────────────────────────── */
+    .time-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.5rem; align-items: end; }
+    .time-sep { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: center; padding-bottom: 0.7rem; }
+    .sub-label { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.3rem; font-weight: 500; }
+
+    /* ── Toggle ──────────────────────────────────────────── */
+    .toggle-row {
+      display: flex; align-items: center; gap: 0.75rem;
+      cursor: pointer; padding: 0.4rem 0;
+    }
+
+    .toggle { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: var(--border); border-radius: 11px; transition: background .15s;
+    }
+
+    .toggle-slider::before {
+      content: ''; position: absolute;
+      left: 3px; top: 3px; width: 16px; height: 16px;
+      background: #fff; border-radius: 50%;
+      transition: transform .15s; box-shadow: 0 1px 3px rgba(0,0,0,.18);
+    }
+
+    .toggle input:checked + .toggle-slider { background: var(--primary); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+    .toggle-label { font-size: 0.875rem; color: var(--text); line-height: 1.4; }
+
+    /* ── Divider ─────────────────────────────────────────── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 1.25rem 0; }
+
+    /* ── Buttons ─────────────────────────────────────────── */
+    .btn-primary {
+      width: 100%; padding: 0.8rem 1rem;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+      color: #fff; border: none; border-radius: var(--radius-sm);
+      font-family: inherit; font-size: 0.95rem; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      transition: opacity .15s, transform .1s, box-shadow .15s;
+      box-shadow: 0 2px 12px var(--primary-glow);
+    }
+
+    .btn-primary:hover:not(:disabled) { opacity: 0.92; transform: translateY(-1px); }
+    .btn-primary:active:not(:disabled) { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .btn-primary .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.35);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin .7s linear infinite; display: none;
+    }
+
+    .btn-primary.loading .spinner { display: block; }
+    .btn-primary.loading .btn-text { display: none; }
+
+    .btn-outline {
+      padding: 0.65rem 1.25rem;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      background: transparent; font-family: inherit; font-size: 0.875rem;
+      font-weight: 500; color: var(--text-secondary); cursor: pointer;
+      transition: all .15s;
+    }
+
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+    .btn-danger {
+      width: 100%; padding: 0.75rem 1rem;
+      background: transparent; color: var(--error);
+      border: 1.5px solid #fca5a5; border-radius: var(--radius-sm);
+      font-family: inherit; font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; transition: all .15s;
+    }
+
+    .btn-danger:hover { background: var(--error-bg); border-color: var(--error); }
+
+    .btn-success {
+      width: 100%; padding: 0.75rem 1rem;
+      background: transparent; color: var(--success);
+      border: 1.5px solid #6ee7b7; border-radius: var(--radius-sm);
+      font-family: inherit; font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; transition: all .15s;
+    }
+
+    .btn-success:hover { background: var(--success-bg); border-color: var(--success); }
+
+    .btn-link {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.65rem 1.25rem;
+      background: var(--primary-light); color: var(--primary);
+      border: none; border-radius: var(--radius-sm);
+      font-family: inherit; font-size: 0.875rem; font-weight: 600;
+      cursor: pointer; text-decoration: none; transition: all .15s;
+    }
+
+    .btn-link:hover { background: #e0e7ff; }
+
+    /* ── Message banner ──────────────────────────────────── */
+    .msg {
+      margin-top: 1rem; padding: 0.8rem 1rem;
+      border-radius: var(--radius-sm); font-size: 0.875rem; font-weight: 500;
+      display: none; align-items: flex-start; gap: 0.5rem; line-height: 1.4;
+    }
+
+    .msg.ok  { background: var(--success-bg); color: var(--success); display: flex; }
+    .msg.err { background: var(--error-bg);   color: var(--error);   display: flex; }
+
+    /* ── Upcoming meetings ───────────────────────────────── */
+    .meeting-item {
+      display: flex; align-items: flex-start; gap: 0.875rem;
+      padding: 0.875rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .meeting-item:last-child { border-bottom: none; }
+
+    .meeting-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--primary-light);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+
+    .meeting-icon svg { color: var(--primary); }
+
+    .meeting-info { flex: 1; min-width: 0; }
+    .meeting-pair { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+    .meeting-time { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
+    .meeting-round { font-size: 0.72rem; color: #9ca3af; margin-top: 2px; }
+
+    .empty-meetings {
+      text-align: center; padding: 1.5rem 0;
+      color: var(--text-secondary); font-size: 0.875rem;
+    }
+
+    /* ── Team target pills ───────────────────────────────── */
+    .team-targets-wrap {
+      margin-top: 0.75rem;
+      padding: 0.9rem 1rem;
+      background: var(--primary-light);
+      border-radius: var(--radius-sm);
+      display: none;
+    }
+
+    .team-targets-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.6rem;
+    }
+
+    .team-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+    .team-pill {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.3rem 0.7rem;
+      border: 1.5px solid #c7d2fe; border-radius: 20px;
+      font-size: 0.8rem; font-weight: 500;
+      color: var(--primary); background: #fff;
+      cursor: pointer; user-select: none; transition: all .15s;
+    }
+
+    .team-pill input { display: none; }
+
+    .team-pill.selected {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .team-pill-hint { font-size: 0.72rem; color: #818cf8; margin-top: 0.55rem; }
+
+    /* ── Danger zone ─────────────────────────────────────── */
+    .danger-card { border: 1px solid #fecaca; }
+    .danger-card .card-title { color: var(--error); }
+    .danger-card .card-title svg { color: var(--error); }
+    .danger-desc { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5; }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="hero-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" opacity=".5"/>
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87" opacity=".5"/>
+      </svg>
+    </div>
+    <h1>My 1:1 Dashboard</h1>
+    <p>View and manage your rotation preferences</p>
+  </header>
+
+  <!-- Loading -->
+  <div id="loadingScreen">
+    <div class="spinner-lg"></div>
+    <span>Loading your profile…</span>
+  </div>
+
+  <!-- Not registered -->
+  <div id="notFoundScreen">
+    <div class="card">
+      <div class="empty-hero">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <h2 id="nfTitle">You're not in the rotation yet</h2>
+        <p id="nfDesc">Your email (<strong id="nfEmail"></strong>) wasn't found in the participants list.<br>Sign up to join the weekly 1:1 rotation.</p>
+        <a id="signupLink" href="#" class="btn-link">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+          Go to sign-up form
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboardScreen" style="display:none">
+
+    <!-- Inactive banner -->
+    <div id="inactiveBanner" class="banner banner-warn" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>You are currently <strong>inactive</strong> and won't be included in upcoming scheduling runs. Use the "Rejoin rotation" button below to come back.</span>
+    </div>
+
+    <!-- Preferences card -->
+    <div class="card">
+      <!-- Profile header -->
+      <div class="profile-header">
+        <div class="avatar" id="avatarInitials"></div>
+        <div class="profile-info">
+          <div class="profile-name" id="profileName"></div>
+          <div class="profile-email" id="profileEmail"></div>
+          <div class="badge-row" id="badgeRow"></div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="card-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Your Preferences
+      </div>
+
+      <form id="prefsForm" novalidate>
+
+        <div class="field">
+          <div class="field-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Full Name
+          </div>
+          <input type="text" id="name" required autocomplete="name">
+        </div>
+
+        <div class="field">
+          <div class="field-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Preferred Days
+          </div>
+          <div class="days-grid">
+            <div class="day-btn" data-day="Mon">Mon<span class="day-dot"></span></div>
+            <div class="day-btn" data-day="Tue">Tue<span class="day-dot"></span></div>
+            <div class="day-btn" data-day="Wed">Wed<span class="day-dot"></span></div>
+            <div class="day-btn" data-day="Thu">Thu<span class="day-dot"></span></div>
+            <div class="day-btn" data-day="Fri">Fri<span class="day-dot"></span></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Preferred Time Window
+          </div>
+          <div class="time-row">
+            <div>
+              <div class="sub-label">From</div>
+              <div class="select-wrap"><select id="startHour"></select></div>
+            </div>
+            <div class="time-sep">→</div>
+            <div>
+              <div class="sub-label">To</div>
+              <div class="select-wrap"><select id="endHour"></select></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            Your Timezone
+          </div>
+          <div class="select-wrap">
+            <select id="timezone">
+              <optgroup label="Americas">
+                <option value="America/New_York">Eastern Time (New York)</option>
+                <option value="America/Chicago">Central Time (Chicago)</option>
+                <option value="America/Denver">Mountain Time (Denver)</option>
+                <option value="America/Los_Angeles">Pacific Time (Los Angeles)</option>
+                <option value="America/Phoenix">Mountain Time – Arizona</option>
+                <option value="America/Anchorage">Alaska (Anchorage)</option>
+                <option value="Pacific/Honolulu">Hawaii (Honolulu)</option>
+                <option value="America/Toronto">Eastern Time (Toronto)</option>
+                <option value="America/Vancouver">Pacific Time (Vancouver)</option>
+                <option value="America/Edmonton">Mountain Time (Edmonton)</option>
+                <option value="America/Winnipeg">Central Time (Winnipeg)</option>
+                <option value="America/Halifax">Atlantic Time (Halifax)</option>
+                <option value="America/St_Johns">Newfoundland (St. John's)</option>
+                <option value="America/Sao_Paulo">São Paulo</option>
+                <option value="America/Argentina/Buenos_Aires">Buenos Aires</option>
+                <option value="America/Santiago">Santiago</option>
+                <option value="America/Bogota">Bogotá</option>
+                <option value="America/Mexico_City">Mexico City</option>
+              </optgroup>
+              <optgroup label="Europe">
+                <option value="Europe/London">London</option>
+                <option value="Europe/Dublin">Dublin</option>
+                <option value="Europe/Lisbon">Lisbon</option>
+                <option value="Europe/Amsterdam">Amsterdam</option>
+                <option value="Europe/Berlin">Berlin</option>
+                <option value="Europe/Brussels">Brussels</option>
+                <option value="Europe/Paris">Paris</option>
+                <option value="Europe/Rome">Rome</option>
+                <option value="Europe/Madrid">Madrid</option>
+                <option value="Europe/Vienna">Vienna</option>
+                <option value="Europe/Zurich">Zurich</option>
+                <option value="Europe/Stockholm">Stockholm</option>
+                <option value="Europe/Oslo">Oslo</option>
+                <option value="Europe/Copenhagen">Copenhagen</option>
+                <option value="Europe/Helsinki">Helsinki</option>
+                <option value="Europe/Warsaw">Warsaw</option>
+                <option value="Europe/Prague">Prague</option>
+                <option value="Europe/Budapest">Budapest</option>
+                <option value="Europe/Bucharest">Bucharest</option>
+                <option value="Europe/Athens">Athens</option>
+                <option value="Europe/Istanbul">Istanbul</option>
+                <option value="Europe/Moscow">Moscow</option>
+              </optgroup>
+              <optgroup label="Africa">
+                <option value="Africa/Cairo">Cairo</option>
+                <option value="Africa/Lagos">Lagos</option>
+                <option value="Africa/Johannesburg">Johannesburg</option>
+              </optgroup>
+              <optgroup label="Middle East &amp; Asia">
+                <option value="Asia/Jerusalem">Jerusalem</option>
+                <option value="Asia/Dubai">Dubai</option>
+                <option value="Asia/Kolkata">Mumbai / Kolkata</option>
+                <option value="Asia/Singapore">Singapore</option>
+                <option value="Asia/Hong_Kong">Hong Kong</option>
+                <option value="Asia/Shanghai">Beijing / Shanghai</option>
+                <option value="Asia/Tokyo">Tokyo</option>
+                <option value="Asia/Seoul">Seoul</option>
+              </optgroup>
+              <optgroup label="Pacific">
+                <option value="Australia/Perth">Perth</option>
+                <option value="Australia/Adelaide">Adelaide</option>
+                <option value="Australia/Brisbane">Brisbane</option>
+                <option value="Australia/Melbourne">Melbourne</option>
+                <option value="Australia/Sydney">Sydney</option>
+                <option value="Pacific/Auckland">Auckland</option>
+              </optgroup>
+              <optgroup label="Other">
+                <option value="UTC">UTC</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Team
+          </div>
+          <div class="select-wrap">
+            <select id="team">
+              <option value="">No team / not set</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            Cross-team meetings
+          </div>
+          <label class="toggle-row">
+            <div class="toggle">
+              <input type="checkbox" id="crossTeamOpen">
+              <span class="toggle-slider"></span>
+            </div>
+            <span class="toggle-label">I'm open to meeting colleagues outside my team</span>
+          </label>
+          <div class="team-targets-wrap" id="crossTeamTargetsWrap">
+            <div class="team-targets-label">Which teams are you open to?</div>
+            <div class="team-pills" id="teamPills"></div>
+            <div class="team-pill-hint">All selected = open to everyone who is cross-team open.</div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary" id="saveBtn">
+          <div class="spinner"></div>
+          <span class="btn-text">Save preferences</span>
+        </button>
+
+        <div class="msg" id="prefsMsg"></div>
+
+      </form>
+    </div>
+
+    <!-- Upcoming 1:1s card -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Upcoming 1:1s
+      </div>
+      <div id="upcomingList"></div>
+    </div>
+
+    <!-- Danger zone card -->
+    <div class="card danger-card">
+      <div class="card-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Rotation Status
+      </div>
+      <p class="danger-desc" id="dangerDesc"></p>
+      <button class="btn-danger" id="deactivateBtn" style="display:none">Leave rotation</button>
+      <button class="btn-success" id="rejoinBtn" style="display:none">Rejoin rotation</button>
+      <div class="msg" id="dangerMsg"></div>
+    </div>
+
+  </div><!-- /dashboardScreen -->
+
+  <script>
+    // ── Helpers ─────────────────────────────────────────────
+    // Updated to the participant's saved timezone once the profile loads.
+    var TZ = 'Europe/Berlin';
+
+    function fmtHour(h) {
+      if (h === 0)  return '12:00 AM';
+      if (h < 12)   return h + ':00 AM';
+      if (h === 12) return '12:00 PM';
+      return (h - 12) + ':00 PM';
+    }
+
+    function fmtDate(iso) {
+      return new Intl.DateTimeFormat('en-GB', {
+        timeZone: TZ,
+        weekday: 'short', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: false,
+      }).format(new Date(iso));
+    }
+
+    function initials(name) {
+      return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    }
+
+    function buildSelect(id, selected) {
+      const el = document.getElementById(id);
+      for (let h = 7; h <= 20; h++) {
+        const o = document.createElement('option');
+        o.value = h;
+        o.textContent = fmtHour(h);
+        if (h === selected) o.selected = true;
+        el.appendChild(o);
+      }
+    }
+
+    function showMsg(containerId, text, type) {
+      const el = document.getElementById(containerId);
+      el.className = 'msg ' + type;
+      const icon = type === 'err'
+        ? '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
+        : '<polyline points="20 6 9 17 4 12"/>';
+      el.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px">' + icon + '</svg><span>' + text + '</span>';
+    }
+
+    function clearMsg(containerId) {
+      const el = document.getElementById(containerId);
+      el.className = 'msg';
+      el.innerHTML = '';
+    }
+
+    // ── Init ────────────────────────────────────────────────
+    buildSelect('startHour', 10);
+    buildSelect('endHour',   16);
+
+    document.querySelectorAll('.day-btn').forEach(function(b) {
+      b.addEventListener('click', function() { b.classList.toggle('on'); });
+    });
+
+    // ── Cross-team targets panel ─────────────────────────────
+    var _allTeams = [];
+
+    function rebuildPills(ownTeam, selectedTargets) {
+      var container = document.getElementById('teamPills');
+      container.innerHTML = '';
+      _allTeams.forEach(function(t) {
+        if (t === ownTeam) return; // own team is irrelevant for cross-team targets
+        var checked = !selectedTargets || selectedTargets.length === 0 || selectedTargets.includes(t);
+        var lbl = document.createElement('label');
+        lbl.className = 'team-pill' + (checked ? ' selected' : '');
+        var cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.value = t; cb.className = 'team-target-cb';
+        cb.checked = checked;
+        cb.addEventListener('change', function() {
+          lbl.classList.toggle('selected', this.checked);
+        });
+        lbl.appendChild(cb);
+        lbl.appendChild(document.createTextNode(t));
+        container.appendChild(lbl);
+      });
+    }
+
+    function getCrossTeamTargets() {
+      var checked = Array.from(document.querySelectorAll('.team-target-cb:checked')).map(function(c) { return c.value; });
+      var all     = Array.from(document.querySelectorAll('.team-target-cb')).map(function(c) { return c.value; });
+      return checked.length === all.length ? '' : checked.join(',');
+    }
+
+    // Rebuild pills when own team changes
+    document.getElementById('team').addEventListener('change', function() {
+      rebuildPills(this.value, []);
+    });
+
+    // Show/hide targets panel
+    document.getElementById('crossTeamOpen').addEventListener('change', function() {
+      document.getElementById('crossTeamTargetsWrap').style.display = this.checked ? 'block' : 'none';
+    });
+
+    // ── Load profile ────────────────────────────────────────
+    google.script.run
+      .withSuccessHandler(render)
+      .withFailureHandler(function(err) {
+        document.getElementById('loadingScreen').style.display = 'none';
+        document.getElementById('notFoundScreen').style.display = 'block';
+        document.getElementById('nfEmail').textContent = 'unknown';
+      })
+      .getMyProfile();
+
+    // ── Render ──────────────────────────────────────────────
+    function render(data) {
+      document.getElementById('loadingScreen').style.display = 'none';
+
+      // Set the sign-up link to point to the same deployment without ?page=dashboard
+      var base = window.location.href.split('?')[0];
+      document.getElementById('signupLink').href = base;
+
+      if (data.error && !data.found) {
+        document.getElementById('nfTitle').textContent    = 'Unable to load your profile';
+        document.getElementById('nfDesc').textContent     = data.error + ' Please reload the page.';
+        document.getElementById('signupLink').style.display = 'none';
+        document.getElementById('notFoundScreen').style.display = 'block';
+        return;
+      }
+
+      if (!data.found) {
+        document.getElementById('nfEmail').textContent = data.email || '';
+        document.getElementById('notFoundScreen').style.display = 'block';
+        return;
+      }
+
+      var p = data.profile;
+
+      // Profile header
+      document.getElementById('avatarInitials').textContent = initials(p.name);
+      document.getElementById('profileName').textContent    = p.name;
+      document.getElementById('profileEmail').textContent   = p.email;
+
+      var badgeRow = document.getElementById('badgeRow');
+      badgeRow.innerHTML = '';
+
+      var statusBadge = document.createElement('span');
+      statusBadge.className = p.active ? 'badge badge-active' : 'badge badge-inactive';
+      statusBadge.textContent = p.active ? '● Active' : '● Inactive';
+      badgeRow.appendChild(statusBadge);
+
+      if (p.team) {
+        var teamBadge = document.createElement('span');
+        teamBadge.className   = 'badge badge-team';
+        teamBadge.textContent = p.team;
+        badgeRow.appendChild(teamBadge);
+      }
+
+      if (p.crossTeamOpen) {
+        var crossBadge = document.createElement('span');
+        crossBadge.className   = 'badge badge-cross';
+        crossBadge.textContent = '⇄ Cross-team open';
+        badgeRow.appendChild(crossBadge);
+      }
+
+      // Inactive banner
+      if (!p.active) {
+        document.getElementById('inactiveBanner').style.display = 'flex';
+      }
+
+      // Populate form
+      document.getElementById('name').value = p.name;
+
+      // Days
+      var activeDays = p.preferredDays
+        ? p.preferredDays.split(',').map(function(d) { return d.trim(); })
+        : [];
+      document.querySelectorAll('.day-btn').forEach(function(btn) {
+        if (activeDays.includes(btn.dataset.day)) btn.classList.add('on');
+        else btn.classList.remove('on');
+      });
+
+      // Hours
+      document.getElementById('startHour').value = p.preferredStartHour;
+      document.getElementById('endHour').value   = p.preferredEndHour;
+
+      // Timezone — pre-select saved value, fall back to browser detection
+      (function() {
+        var saved = p.timezone || '';
+        var tzSel = document.getElementById('timezone');
+        var opts  = Array.from(tzSel.options);
+        var match = opts.find(function(o) { return o.value === saved; });
+        if (match) {
+          tzSel.value = saved;
+          TZ = saved;
+        } else {
+          try {
+            var browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            var bMatch = opts.find(function(o) { return o.value === browserTz; });
+            if (bMatch) { tzSel.value = browserTz; TZ = browserTz; }
+          } catch (e) {}
+        }
+      })();
+
+      // Teams dropdown
+      _allTeams = data.teams;
+      var sel = document.getElementById('team');
+      data.teams.forEach(function(t) {
+        var o = document.createElement('option');
+        o.value = t; o.textContent = t;
+        if (t === p.team) o.selected = true;
+        sel.appendChild(o);
+      });
+      if (!p.team) sel.value = '';
+
+      // Cross-team toggle + targets
+      document.getElementById('crossTeamOpen').checked = p.crossTeamOpen;
+      var savedTargets = p.crossTeamTargets
+        ? p.crossTeamTargets.split(',').map(function(t) { return t.trim(); }).filter(Boolean)
+        : [];
+      rebuildPills(p.team, savedTargets);
+      if (p.crossTeamOpen) {
+        document.getElementById('crossTeamTargetsWrap').style.display = 'block';
+      }
+
+      // Upcoming meetings
+      renderUpcoming(data.upcoming, p.name);
+
+      // Danger zone
+      var dangerDesc = document.getElementById('dangerDesc');
+      if (p.active) {
+        dangerDesc.textContent = "Leaving the rotation means you won't be scheduled for new 1:1s. You can rejoin at any time from this page.";
+        document.getElementById('deactivateBtn').style.display = 'block';
+      } else {
+        dangerDesc.textContent = "You are currently inactive. Click below to rejoin the rotation and be included in future scheduling runs.";
+        document.getElementById('rejoinBtn').style.display = 'block';
+      }
+
+      // Store email for form submissions
+      window._myEmail = p.email;
+
+      document.getElementById('dashboardScreen').style.display = 'block';
+    }
+
+    // ── Render upcoming meetings ─────────────────────────────
+    function renderUpcoming(upcoming, myName) {
+      var list = document.getElementById('upcomingList');
+      if (!upcoming || upcoming.length === 0) {
+        list.innerHTML = '<div class="empty-meetings">No upcoming 1:1s scheduled yet.</div>';
+        return;
+      }
+
+      list.innerHTML = upcoming.map(function(m) {
+        var parts = m.pair.split(' & ');
+        var partnerName = parts.find(function(n) { return n.trim() !== myName.trim(); }) || m.pair;
+        return '<div class="meeting-item">' +
+          '<div class="meeting-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>' +
+          '<div class="meeting-info">' +
+            '<div class="meeting-pair">1:1 with ' + partnerName + '</div>' +
+            '<div class="meeting-time">' + fmtDate(m.scheduledTime) + ' (' + TZ.split('/').pop().replace(/_/g, ' ') + ')</div>' +
+            '<div class="meeting-round">Round ' + m.round + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    // ── Save preferences ────────────────────────────────────
+    document.getElementById('prefsForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      clearMsg('prefsMsg');
+
+      var name = document.getElementById('name').value.trim();
+      if (!name) return showMsg('prefsMsg', 'Please enter your name.', 'err');
+
+      var days = Array.from(document.querySelectorAll('.day-btn.on')).map(function(b) { return b.dataset.day; });
+      if (days.length === 0) return showMsg('prefsMsg', 'Please select at least one preferred day.', 'err');
+
+      var start = parseInt(document.getElementById('startHour').value, 10);
+      var end   = parseInt(document.getElementById('endHour').value,   10);
+      if (start >= end) return showMsg('prefsMsg', '"To" time must be later than "From" time.', 'err');
+
+      var btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      btn.classList.add('loading');
+
+      google.script.run
+        .withSuccessHandler(function(r) {
+          btn.disabled = false;
+          btn.classList.remove('loading');
+          if (r.success) {
+            showMsg('prefsMsg', r.message, 'ok');
+            // Update name in header
+            document.getElementById('profileName').textContent = name;
+            document.getElementById('avatarInitials').textContent = initials(name);
+            // Rebuild team + cross-team badges (keep the active/inactive badge at index 0)
+            var badgeRow = document.getElementById('badgeRow');
+            while (badgeRow.children.length > 1) badgeRow.removeChild(badgeRow.lastChild);
+            var newTeam = document.getElementById('team').value;
+            if (newTeam) {
+              var tb = document.createElement('span');
+              tb.className = 'badge badge-team';
+              tb.textContent = newTeam;
+              badgeRow.appendChild(tb);
+            }
+            if (document.getElementById('crossTeamOpen').checked) {
+              var xb = document.createElement('span');
+              xb.className = 'badge badge-cross';
+              xb.textContent = '⇄ Cross-team open';
+              badgeRow.appendChild(xb);
+            }
+          } else {
+            showMsg('prefsMsg', r.message, 'err');
+          }
+        })
+        .withFailureHandler(function() {
+          btn.disabled = false;
+          btn.classList.remove('loading');
+          showMsg('prefsMsg', 'Something went wrong. Please try again.', 'err');
+        })
+        .updateMyProfile({
+          name:               name,
+          email:              window._myEmail,
+          preferredDays:      days.join(','),
+          preferredStartHour: start,
+          preferredEndHour:   end,
+          timezone:           document.getElementById('timezone').value,
+          team:               document.getElementById('team').value,
+          crossTeamOpen:      document.getElementById('crossTeamOpen').checked,
+          crossTeamTargets:   getCrossTeamTargets(),
+        });
+    });
+
+    // ── Deactivate ──────────────────────────────────────────
+    document.getElementById('deactivateBtn').addEventListener('click', function() {
+      if (!confirm('Leave the rotation? You can rejoin at any time from this page.')) return;
+      var btn = this;
+      btn.disabled = true;
+      clearMsg('dangerMsg');
+
+      google.script.run
+        .withSuccessHandler(function(r) {
+          if (r.success) {
+            document.getElementById('inactiveBanner').style.display = 'flex';
+            document.getElementById('deactivateBtn').style.display = 'none';
+            document.getElementById('rejoinBtn').style.display = 'block';
+            document.getElementById('dangerDesc').textContent = "You are currently inactive. Click below to rejoin the rotation and be included in future scheduling runs.";
+            // Update badge
+            var badge = document.querySelector('.badge-active');
+            if (badge) { badge.className = 'badge badge-inactive'; badge.textContent = '● Inactive'; }
+            showMsg('dangerMsg', "You've left the rotation. See you next time!", 'ok');
+          } else {
+            btn.disabled = false;
+            showMsg('dangerMsg', r.message || 'Something went wrong.', 'err');
+          }
+        })
+        .withFailureHandler(function() {
+          btn.disabled = false;
+          showMsg('dangerMsg', 'Something went wrong. Please try again.', 'err');
+        })
+        .deactivateMe();
+    });
+
+    // ── Rejoin ───────────────────────────────────────────────
+    document.getElementById('rejoinBtn').addEventListener('click', function() {
+      var btn = this;
+      btn.disabled = true;
+      clearMsg('dangerMsg');
+
+      google.script.run
+        .withSuccessHandler(function(r) {
+          if (r.success) {
+            document.getElementById('inactiveBanner').style.display = 'none';
+            document.getElementById('rejoinBtn').style.display = 'none';
+            document.getElementById('deactivateBtn').style.display = 'block';
+            document.getElementById('dangerDesc').textContent = "Leaving the rotation means you won't be scheduled for new 1:1s. You can rejoin at any time from this page.";
+            // Update badge
+            var badge = document.querySelector('.badge-inactive');
+            if (badge) { badge.className = 'badge badge-active'; badge.textContent = '● Active'; }
+            showMsg('dangerMsg', "Welcome back! You'll be included in the next scheduling run.", 'ok');
+          } else {
+            btn.disabled = false;
+            showMsg('dangerMsg', r.message || 'Something went wrong.', 'err');
+          }
+        })
+        .withFailureHandler(function() {
+          btn.disabled = false;
+          showMsg('dangerMsg', 'Something went wrong. Please try again.', 'err');
+        })
+        .rejoinRotation();
+    });
+  </script>
+</body>
+</html>

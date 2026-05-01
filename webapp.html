@@ -351,6 +351,113 @@
 
     .btn-again:hover { border-color: var(--primary); color: var(--primary); }
 
+    /* ── Toggle switch ───────────────────────────────────── */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      padding: 0.55rem 0;
+    }
+
+    .toggle {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 11px;
+      transition: background .15s;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform .15s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.18);
+    }
+
+    .toggle input:checked + .toggle-slider { background: var(--primary); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+    .toggle-label {
+      font-size: 0.875rem;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    /* ── Team target pills ───────────────────────────────────── */
+    .team-targets-wrap {
+      margin-top: 0.75rem;
+      padding: 0.9rem 1rem;
+      background: var(--primary-light);
+      border-radius: var(--radius-sm);
+      display: none;
+    }
+
+    .team-targets-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.6rem;
+    }
+
+    .team-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .team-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.3rem 0.7rem;
+      border: 1.5px solid #c7d2fe;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--primary);
+      background: #fff;
+      cursor: pointer;
+      user-select: none;
+      transition: all .15s;
+    }
+
+    .team-pill input { display: none; }
+
+    .team-pill.selected {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .team-pill-hint {
+      font-size: 0.72rem;
+      color: #818cf8;
+      margin-top: 0.55rem;
+    }
+
     /* ── Footer ──────────────────────────────────────────── */
     .footer {
       margin-top: 1.5rem;
@@ -433,6 +540,118 @@
         </div>
       </div>
 
+      <div class="field">
+        <div class="field-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Your Timezone
+        </div>
+        <div class="select-wrap">
+          <select id="timezone">
+            <optgroup label="Americas">
+              <option value="America/New_York">Eastern Time (New York)</option>
+              <option value="America/Chicago">Central Time (Chicago)</option>
+              <option value="America/Denver">Mountain Time (Denver)</option>
+              <option value="America/Los_Angeles">Pacific Time (Los Angeles)</option>
+              <option value="America/Phoenix">Mountain Time – Arizona</option>
+              <option value="America/Anchorage">Alaska (Anchorage)</option>
+              <option value="Pacific/Honolulu">Hawaii (Honolulu)</option>
+              <option value="America/Toronto">Eastern Time (Toronto)</option>
+              <option value="America/Vancouver">Pacific Time (Vancouver)</option>
+              <option value="America/Edmonton">Mountain Time (Edmonton)</option>
+              <option value="America/Winnipeg">Central Time (Winnipeg)</option>
+              <option value="America/Halifax">Atlantic Time (Halifax)</option>
+              <option value="America/St_Johns">Newfoundland (St. John's)</option>
+              <option value="America/Sao_Paulo">São Paulo</option>
+              <option value="America/Argentina/Buenos_Aires">Buenos Aires</option>
+              <option value="America/Santiago">Santiago</option>
+              <option value="America/Bogota">Bogotá</option>
+              <option value="America/Mexico_City">Mexico City</option>
+            </optgroup>
+            <optgroup label="Europe">
+              <option value="Europe/London">London</option>
+              <option value="Europe/Dublin">Dublin</option>
+              <option value="Europe/Lisbon">Lisbon</option>
+              <option value="Europe/Amsterdam">Amsterdam</option>
+              <option value="Europe/Berlin">Berlin</option>
+              <option value="Europe/Brussels">Brussels</option>
+              <option value="Europe/Paris">Paris</option>
+              <option value="Europe/Rome">Rome</option>
+              <option value="Europe/Madrid">Madrid</option>
+              <option value="Europe/Vienna">Vienna</option>
+              <option value="Europe/Zurich">Zurich</option>
+              <option value="Europe/Stockholm">Stockholm</option>
+              <option value="Europe/Oslo">Oslo</option>
+              <option value="Europe/Copenhagen">Copenhagen</option>
+              <option value="Europe/Helsinki">Helsinki</option>
+              <option value="Europe/Warsaw">Warsaw</option>
+              <option value="Europe/Prague">Prague</option>
+              <option value="Europe/Budapest">Budapest</option>
+              <option value="Europe/Bucharest">Bucharest</option>
+              <option value="Europe/Athens">Athens</option>
+              <option value="Europe/Istanbul">Istanbul</option>
+              <option value="Europe/Moscow">Moscow</option>
+            </optgroup>
+            <optgroup label="Africa">
+              <option value="Africa/Cairo">Cairo</option>
+              <option value="Africa/Lagos">Lagos</option>
+              <option value="Africa/Johannesburg">Johannesburg</option>
+            </optgroup>
+            <optgroup label="Middle East &amp; Asia">
+              <option value="Asia/Jerusalem">Jerusalem</option>
+              <option value="Asia/Dubai">Dubai</option>
+              <option value="Asia/Kolkata">Mumbai / Kolkata</option>
+              <option value="Asia/Singapore">Singapore</option>
+              <option value="Asia/Hong_Kong">Hong Kong</option>
+              <option value="Asia/Shanghai">Beijing / Shanghai</option>
+              <option value="Asia/Tokyo">Tokyo</option>
+              <option value="Asia/Seoul">Seoul</option>
+            </optgroup>
+            <optgroup label="Pacific">
+              <option value="Australia/Perth">Perth</option>
+              <option value="Australia/Adelaide">Adelaide</option>
+              <option value="Australia/Brisbane">Brisbane</option>
+              <option value="Australia/Melbourne">Melbourne</option>
+              <option value="Australia/Sydney">Sydney</option>
+              <option value="Pacific/Auckland">Auckland</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option value="UTC">UTC</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Team
+        </div>
+        <div class="select-wrap">
+          <select id="team">
+            <option value="">No team / not set</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Cross-team meetings
+        </div>
+        <label class="toggle-row">
+          <div class="toggle">
+            <input type="checkbox" id="crossTeamOpen">
+            <span class="toggle-slider"></span>
+          </div>
+          <span class="toggle-label">I'm open to meeting colleagues outside my team</span>
+        </label>
+        <div class="team-targets-wrap" id="crossTeamTargetsWrap">
+          <div class="team-targets-label">Which teams are you open to?</div>
+          <div class="team-pills" id="teamPills"></div>
+          <div class="team-pill-hint">All selected = open to everyone who is cross-team open.</div>
+        </div>
+      </div>
+
       <hr class="divider">
 
       <button type="submit" class="btn-submit" id="submitBtn">
@@ -487,6 +706,75 @@
     buildSelect('startHour', 10);
     buildSelect('endHour',   16);
 
+    // Auto-detect the browser's timezone and pre-select it
+    (function() {
+      try {
+        var browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        var sel  = document.getElementById('timezone');
+        var opts = Array.from(sel.options);
+        var match = opts.find(function(o) { return o.value === browserTz; });
+        if (match) sel.value = browserTz;
+      } catch (e) {}
+    })();
+
+    // ── Load teams from server ───────────────────────────────
+    var _allTeams = [];
+
+    google.script.run
+      .withSuccessHandler(function(teams) {
+        _allTeams = teams;
+        const sel = document.getElementById('team');
+        teams.forEach(function(t) {
+          const o = document.createElement('option');
+          o.value = t; o.textContent = t;
+          sel.appendChild(o);
+        });
+        rebuildPills();
+      })
+      .withFailureHandler(function() {
+        // Teams sheet unavailable — dropdown keeps "No team / not set" only
+      })
+      .getTeams();
+
+    function rebuildPills(selectedTargets) {
+      const ownTeam = document.getElementById('team').value;
+      const container = document.getElementById('teamPills');
+      container.innerHTML = '';
+      _allTeams.forEach(function(t) {
+        if (t === ownTeam) return; // exclude own team
+        const checked = !selectedTargets || selectedTargets.length === 0 || selectedTargets.includes(t);
+        const lbl = document.createElement('label');
+        lbl.className = 'team-pill' + (checked ? ' selected' : '');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.value = t; cb.className = 'team-target-cb';
+        cb.checked = checked;
+        cb.addEventListener('change', function() {
+          lbl.classList.toggle('selected', this.checked);
+        });
+        lbl.appendChild(cb);
+        lbl.appendChild(document.createTextNode(t));
+        container.appendChild(lbl);
+      });
+    }
+
+    // Returns selected team targets as a comma-separated string.
+    // Empty string means "all teams" (stored when every available team is checked).
+    function getCrossTeamTargets() {
+      const checked = [...document.querySelectorAll('.team-target-cb:checked')].map(c => c.value);
+      const all     = [...document.querySelectorAll('.team-target-cb')].map(c => c.value);
+      return checked.length === all.length ? '' : checked.join(',');
+    }
+
+    // Rebuild pills when own team changes
+    document.getElementById('team').addEventListener('change', function() {
+      rebuildPills();
+    });
+
+    // Show/hide targets panel when toggle changes
+    document.getElementById('crossTeamOpen').addEventListener('change', function() {
+      document.getElementById('crossTeamTargetsWrap').style.display = this.checked ? 'block' : 'none';
+    });
+
     // ── Day toggles ─────────────────────────────────────────
     document.querySelectorAll('.day-btn').forEach(b =>
       b.addEventListener('click', () => b.classList.toggle('on'))
@@ -531,10 +819,16 @@
           btn.classList.remove('loading');
           showMsg('Something went wrong on our end. Please try again.', 'err');
         })
-        .submitParticipant({ name, email,
+        .submitParticipant({
+          name,
+          email,
           preferredDays:      days.join(','),
           preferredStartHour: start,
           preferredEndHour:   end,
+          timezone:           document.getElementById('timezone').value,
+          team:               document.getElementById('team').value,
+          crossTeamOpen:      document.getElementById('crossTeamOpen').checked,
+          crossTeamTargets:   getCrossTeamTargets(),
         });
     });
 

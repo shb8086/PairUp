@@ -37,8 +37,9 @@ function findFreeSlot(emails, prefs) {
   const startHour   = prefs.preferredStartHour || CFG.workStartHour;
   const endHour     = prefs.preferredEndHour   || CFG.workEndHour;
   const allowedDays = prefs.preferredDays      || [1, 2, 3, 4, 5];
+  const timezones   = prefs.timezones          || [];
 
-  const now      = new Date();
+  const now       = new Date();
   const scanStart = new Date(now.getTime() + CFG.scheduleMinDaysAhead * 24 * 60 * 60 * 1000);
   const scanEnd   = new Date(now.getTime() + CFG.searchDaysAhead       * 24 * 60 * 60 * 1000);
   let cursor      = roundUpToSlot(scanStart, CFG.slotIntervalMin);
@@ -46,6 +47,12 @@ function findFreeSlot(emails, prefs) {
   while (cursor < scanEnd) {
     cursor = _skipToValidTime(cursor, startHour, endHour, allowedDays);
     if (cursor >= scanEnd) break;
+
+    // Skip the entire day if it is a public holiday for either participant.
+    if (timezones.length > 0 && isHolidayForAny(cursor, timezones)) {
+      cursor = jumpToNextWorkday(cursor, startHour);
+      continue;
+    }
 
     const slotEnd = new Date(cursor.getTime() + CFG.durationMins * 60 * 1000);
     const endsAfterWork = slotEnd.getHours() > endHour ||
