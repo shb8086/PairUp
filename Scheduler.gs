@@ -189,5 +189,6 @@ function _intersectPrefs(p1, p2) {
     preferredDays:      sharedDays.length > 0 ? sharedDays : [1, 2, 3, 4, 5],
     preferredStartHour: hasTimeOverlap ? startHour : CFG.workStartHour,
     preferredEndHour:   hasTimeOverlap ? endHour   : CFG.workEndHour,
+    timezones:          [p1.timezone, p2.timezone].filter(Boolean),
   };
 }

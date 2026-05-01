@@ -541,6 +541,87 @@
 
         <div class="field">
           <div class="field-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            Your Timezone
+          </div>
+          <div class="select-wrap">
+            <select id="timezone">
+              <optgroup label="Americas">
+                <option value="America/New_York">Eastern Time (New York)</option>
+                <option value="America/Chicago">Central Time (Chicago)</option>
+                <option value="America/Denver">Mountain Time (Denver)</option>
+                <option value="America/Los_Angeles">Pacific Time (Los Angeles)</option>
+                <option value="America/Phoenix">Mountain Time – Arizona</option>
+                <option value="America/Anchorage">Alaska (Anchorage)</option>
+                <option value="Pacific/Honolulu">Hawaii (Honolulu)</option>
+                <option value="America/Toronto">Eastern Time (Toronto)</option>
+                <option value="America/Vancouver">Pacific Time (Vancouver)</option>
+                <option value="America/Edmonton">Mountain Time (Edmonton)</option>
+                <option value="America/Winnipeg">Central Time (Winnipeg)</option>
+                <option value="America/Halifax">Atlantic Time (Halifax)</option>
+                <option value="America/St_Johns">Newfoundland (St. John's)</option>
+                <option value="America/Sao_Paulo">São Paulo</option>
+                <option value="America/Argentina/Buenos_Aires">Buenos Aires</option>
+                <option value="America/Santiago">Santiago</option>
+                <option value="America/Bogota">Bogotá</option>
+                <option value="America/Mexico_City">Mexico City</option>
+              </optgroup>
+              <optgroup label="Europe">
+                <option value="Europe/London">London</option>
+                <option value="Europe/Dublin">Dublin</option>
+                <option value="Europe/Lisbon">Lisbon</option>
+                <option value="Europe/Amsterdam">Amsterdam</option>
+                <option value="Europe/Berlin">Berlin</option>
+                <option value="Europe/Brussels">Brussels</option>
+                <option value="Europe/Paris">Paris</option>
+                <option value="Europe/Rome">Rome</option>
+                <option value="Europe/Madrid">Madrid</option>
+                <option value="Europe/Vienna">Vienna</option>
+                <option value="Europe/Zurich">Zurich</option>
+                <option value="Europe/Stockholm">Stockholm</option>
+                <option value="Europe/Oslo">Oslo</option>
+                <option value="Europe/Copenhagen">Copenhagen</option>
+                <option value="Europe/Helsinki">Helsinki</option>
+                <option value="Europe/Warsaw">Warsaw</option>
+                <option value="Europe/Prague">Prague</option>
+                <option value="Europe/Budapest">Budapest</option>
+                <option value="Europe/Bucharest">Bucharest</option>
+                <option value="Europe/Athens">Athens</option>
+                <option value="Europe/Istanbul">Istanbul</option>
+                <option value="Europe/Moscow">Moscow</option>
+              </optgroup>
+              <optgroup label="Africa">
+                <option value="Africa/Cairo">Cairo</option>
+                <option value="Africa/Lagos">Lagos</option>
+                <option value="Africa/Johannesburg">Johannesburg</option>
+              </optgroup>
+              <optgroup label="Middle East &amp; Asia">
+                <option value="Asia/Jerusalem">Jerusalem</option>
+                <option value="Asia/Dubai">Dubai</option>
+                <option value="Asia/Kolkata">Mumbai / Kolkata</option>
+                <option value="Asia/Singapore">Singapore</option>
+                <option value="Asia/Hong_Kong">Hong Kong</option>
+                <option value="Asia/Shanghai">Beijing / Shanghai</option>
+                <option value="Asia/Tokyo">Tokyo</option>
+                <option value="Asia/Seoul">Seoul</option>
+              </optgroup>
+              <optgroup label="Pacific">
+                <option value="Australia/Perth">Perth</option>
+                <option value="Australia/Adelaide">Adelaide</option>
+                <option value="Australia/Brisbane">Brisbane</option>
+                <option value="Australia/Melbourne">Melbourne</option>
+                <option value="Australia/Sydney">Sydney</option>
+                <option value="Pacific/Auckland">Auckland</option>
+              </optgroup>
+              <optgroup label="Other">
+                <option value="UTC">UTC</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-label">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             Team
           </div>
@@ -605,7 +686,8 @@
 
   <script>
     // ── Helpers ─────────────────────────────────────────────
-    const TZ = 'Europe/Berlin';
+    // Updated to the participant's saved timezone once the profile loads.
+    var TZ = 'Europe/Berlin';
 
     function fmtHour(h) {
       if (h === 0)  return '12:00 AM';
@@ -781,6 +863,24 @@
       document.getElementById('startHour').value = p.preferredStartHour;
       document.getElementById('endHour').value   = p.preferredEndHour;
 
+      // Timezone — pre-select saved value, fall back to browser detection
+      (function() {
+        var saved = p.timezone || '';
+        var tzSel = document.getElementById('timezone');
+        var opts  = Array.from(tzSel.options);
+        var match = opts.find(function(o) { return o.value === saved; });
+        if (match) {
+          tzSel.value = saved;
+          TZ = saved;
+        } else {
+          try {
+            var browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            var bMatch = opts.find(function(o) { return o.value === browserTz; });
+            if (bMatch) { tzSel.value = browserTz; TZ = browserTz; }
+          } catch (e) {}
+        }
+      })();
+
       // Teams dropdown
       _allTeams = data.teams;
       var sel = document.getElementById('team');
@@ -836,7 +936,7 @@
           '<div class="meeting-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>' +
           '<div class="meeting-info">' +
             '<div class="meeting-pair">1:1 with ' + partnerName + '</div>' +
-            '<div class="meeting-time">' + fmtDate(m.scheduledTime) + ' (Berlin)</div>' +
+            '<div class="meeting-time">' + fmtDate(m.scheduledTime) + ' (' + TZ.split('/').pop().replace(/_/g, ' ') + ')</div>' +
             '<div class="meeting-round">Round ' + m.round + '</div>' +
           '</div>' +
         '</div>';
@@ -902,6 +1002,7 @@
           preferredDays:      days.join(','),
           preferredStartHour: start,
           preferredEndHour:   end,
+          timezone:           document.getElementById('timezone').value,
           team:               document.getElementById('team').value,
           crossTeamOpen:      document.getElementById('crossTeamOpen').checked,
           crossTeamTargets:   getCrossTeamTargets(),

@@ -60,6 +60,7 @@ function getParticipants() {
       team:               String(row[PARTICIPANT_COLS.team - 1] || "").trim(),
       crossTeamOpen:      row[PARTICIPANT_COLS.crossTeamOpen - 1] === true,
       crossTeamTargets:   String(row[PARTICIPANT_COLS.crossTeamTargets - 1] || "").trim(),
+      timezone:           String(row[PARTICIPANT_COLS.timezone - 1] || "").trim(),
     });
   });
 
@@ -96,6 +97,7 @@ function lookupParticipantByEmail(email) {
         team:               String(row[PARTICIPANT_COLS.team - 1] || "").trim(),
         crossTeamOpen:      row[PARTICIPANT_COLS.crossTeamOpen - 1] === true,
         crossTeamTargets:   String(row[PARTICIPANT_COLS.crossTeamTargets - 1] || "").trim(),
+        timezone:           String(row[PARTICIPANT_COLS.timezone - 1] || "").trim(),
       };
     }
   }
@@ -129,6 +131,7 @@ function upsertParticipant(data) {
       sheet.getRange(row, PARTICIPANT_COLS.team).setValue(data.team || "");
       sheet.getRange(row, PARTICIPANT_COLS.crossTeamOpen).setValue(!!data.crossTeamOpen);
       sheet.getRange(row, PARTICIPANT_COLS.crossTeamTargets).setValue(data.crossTeamTargets || "");
+      sheet.getRange(row, PARTICIPANT_COLS.timezone).setValue(data.timezone || "");
       Logger.log(`Updated preferences for: ${data.email}`);
       return;
     }
@@ -144,6 +147,7 @@ function upsertParticipant(data) {
     data.team || "",
     !!data.crossTeamOpen,
     data.crossTeamTargets || "",
+    data.timezone || "",
   ]);
   Logger.log(`Added new participant: ${data.email}`);
 }
@@ -173,6 +177,7 @@ function updateParticipantFromDashboard(data) {
       sheet.getRange(row, PARTICIPANT_COLS.team).setValue(data.team || "");
       sheet.getRange(row, PARTICIPANT_COLS.crossTeamOpen).setValue(!!data.crossTeamOpen);
       sheet.getRange(row, PARTICIPANT_COLS.crossTeamTargets).setValue(data.crossTeamTargets || "");
+      sheet.getRange(row, PARTICIPANT_COLS.timezone).setValue(data.timezone || "");
       Logger.log(`Dashboard update for: ${data.email}`);
       return;
     }
@@ -397,7 +402,7 @@ function _setupParticipantsSheet(ss) {
   const headers = [
     "Name", "Email", "Active",
     "Preferred Days", "Preferred Start Hour", "Preferred End Hour",
-    "Team", "Cross Team Open", "Cross Team Targets",
+    "Team", "Cross Team Open", "Cross Team Targets", "Timezone",
   ];
   sheet.appendRow(headers);
   sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
