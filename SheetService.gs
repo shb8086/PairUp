@@ -5,6 +5,7 @@
 const SHEET_NAMES = {
   participants: "Participants",
   log:          "Schedule Log",
+  teams:        "Teams",
 };
 
 // ── Participants ──────────────────────────────────────────────
@@ -56,6 +57,10 @@ function getParticipants() {
       preferredDays:      parseDays(row[PARTICIPANT_COLS.preferredDays - 1]),
       preferredStartHour: Number(row[PARTICIPANT_COLS.preferredStartHour - 1]) || CFG.workStartHour,
       preferredEndHour:   Number(row[PARTICIPANT_COLS.preferredEndHour - 1])   || CFG.workEndHour,
+      team:               String(row[PARTICIPANT_COLS.team - 1] || "").trim(),
+      crossTeamOpen:      row[PARTICIPANT_COLS.crossTeamOpen - 1] === true,
+      crossTeamTargets:   String(row[PARTICIPANT_COLS.crossTeamTargets - 1] || "").trim(),
+      timezone:           String(row[PARTICIPANT_COLS.timezone - 1] || "").trim(),
     });
   });
 
@@ -63,10 +68,47 @@ function getParticipants() {
 }
 
 /**
- * Inserts a new participant or updates an existing one (matched by email).
- * Called by the web app form submission.
+ * Looks up a single participant by email (active or inactive).
+ * Returns the raw row data for the dashboard — does NOT filter inactive.
  *
- * @param {{ name, email, preferredDays, preferredStartHour, preferredEndHour }} data
+ * @param {string} email
+ * @returns {Object|null}
+ */
+function lookupParticipantByEmail(email) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet()
+    .getSheetByName(SHEET_NAMES.participants);
+  if (!sheet) return null;
+
+  const emailLower = email.toLowerCase().trim();
+  const [, ...rows] = sheet.getDataRange().getValues();
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const rowEmail = String(row[PARTICIPANT_COLS.email - 1] || "").trim().toLowerCase();
+    if (rowEmail === emailLower) {
+      return {
+        row:                i + 2,
+        name:               String(row[PARTICIPANT_COLS.name - 1] || "").trim(),
+        email:              rowEmail,
+        active:             row[PARTICIPANT_COLS.active - 1] === true,
+        preferredDays:      String(row[PARTICIPANT_COLS.preferredDays - 1] || ""),
+        preferredStartHour: Number(row[PARTICIPANT_COLS.preferredStartHour - 1]) || CFG.workStartHour,
+        preferredEndHour:   Number(row[PARTICIPANT_COLS.preferredEndHour - 1])   || CFG.workEndHour,
+        team:               String(row[PARTICIPANT_COLS.team - 1] || "").trim(),
+        crossTeamOpen:      row[PARTICIPANT_COLS.crossTeamOpen - 1] === true,
+        crossTeamTargets:   String(row[PARTICIPANT_COLS.crossTeamTargets - 1] || "").trim(),
+        timezone:           String(row[PARTICIPANT_COLS.timezone - 1] || "").trim(),
+      };
+    }
+  }
+  return null;
+}
+
+/**
+ * Inserts a new participant or updates an existing one (matched by email).
+ * Called by the web app sign-up form submission.
+ *
+ * @param {{ name, email, preferredDays, preferredStartHour, preferredEndHour, team, crossTeamOpen }} data
  */
 function upsertParticipant(data) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet()
@@ -86,6 +128,10 @@ function upsertParticipant(data) {
       sheet.getRange(row, PARTICIPANT_COLS.preferredDays).setValue(data.preferredDays);
       sheet.getRange(row, PARTICIPANT_COLS.preferredStartHour).setValue(data.preferredStartHour);
       sheet.getRange(row, PARTICIPANT_COLS.preferredEndHour).setValue(data.preferredEndHour);
+      sheet.getRange(row, PARTICIPANT_COLS.team).setValue(data.team || "");
+      sheet.getRange(row, PARTICIPANT_COLS.crossTeamOpen).setValue(!!data.crossTeamOpen);
+      sheet.getRange(row, PARTICIPANT_COLS.crossTeamTargets).setValue(data.crossTeamTargets || "");
+      sheet.getRange(row, PARTICIPANT_COLS.timezone).setValue(data.timezone || "");
       Logger.log(`Updated preferences for: ${data.email}`);
       return;
     }
@@ -94,12 +140,152 @@ function upsertParticipant(data) {
   sheet.appendRow([
     data.name,
     data.email,
-    true,                    // Active
+    true,
     data.preferredDays,
     data.preferredStartHour,
     data.preferredEndHour,
+    data.team || "",
+    !!data.crossTeamOpen,
+    data.crossTeamTargets || "",
+    data.timezone || "",
   ]);
   Logger.log(`Added new participant: ${data.email}`);
+}
+
+/**
+ * Updates an existing participant's preferences from the dashboard.
+ * Throws if the participant is not found (dashboard only updates, never inserts).
+ *
+ * @param {{ name, email, preferredDays, preferredStartHour, preferredEndHour, team, crossTeamOpen }} data
+ */
+function updateParticipantFromDashboard(data) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet()
+    .getSheetByName(SHEET_NAMES.participants);
+  if (!sheet) throw new Error("Participants sheet not found.");
+
+  const emailLower = data.email.toLowerCase().trim();
+  const values = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < values.length; i++) {
+    const rowEmail = String(values[i][PARTICIPANT_COLS.email - 1] || "").trim().toLowerCase();
+    if (rowEmail === emailLower) {
+      const row = i + 1;
+      sheet.getRange(row, PARTICIPANT_COLS.name).setValue(data.name);
+      sheet.getRange(row, PARTICIPANT_COLS.preferredDays).setValue(data.preferredDays);
+      sheet.getRange(row, PARTICIPANT_COLS.preferredStartHour).setValue(data.preferredStartHour);
+      sheet.getRange(row, PARTICIPANT_COLS.preferredEndHour).setValue(data.preferredEndHour);
+      sheet.getRange(row, PARTICIPANT_COLS.team).setValue(data.team || "");
+      sheet.getRange(row, PARTICIPANT_COLS.crossTeamOpen).setValue(!!data.crossTeamOpen);
+      sheet.getRange(row, PARTICIPANT_COLS.crossTeamTargets).setValue(data.crossTeamTargets || "");
+      sheet.getRange(row, PARTICIPANT_COLS.timezone).setValue(data.timezone || "");
+      Logger.log(`Dashboard update for: ${data.email}`);
+      return;
+    }
+  }
+  throw new Error("You are not registered. Please use the sign-up form first.");
+}
+
+/**
+ * Sets a participant's Active flag to false.
+ *
+ * @param {string} email
+ */
+function deactivateParticipant(email) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet()
+    .getSheetByName(SHEET_NAMES.participants);
+  if (!sheet) throw new Error("Participants sheet not found.");
+
+  const emailLower = email.toLowerCase().trim();
+  const [, ...rows] = sheet.getDataRange().getValues();
+
+  for (let i = 0; i < rows.length; i++) {
+    const rowEmail = String(rows[i][PARTICIPANT_COLS.email - 1] || "").trim().toLowerCase();
+    if (rowEmail === emailLower) {
+      sheet.getRange(i + 2, PARTICIPANT_COLS.active).setValue(false);
+      return;
+    }
+  }
+  throw new Error("Participant not found.");
+}
+
+/**
+ * Sets a participant's Active flag back to true.
+ *
+ * @param {string} email
+ */
+function reactivateParticipant(email) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet()
+    .getSheetByName(SHEET_NAMES.participants);
+  if (!sheet) throw new Error("Participants sheet not found.");
+
+  const emailLower = email.toLowerCase().trim();
+  const [, ...rows] = sheet.getDataRange().getValues();
+
+  for (let i = 0; i < rows.length; i++) {
+    const rowEmail = String(rows[i][PARTICIPANT_COLS.email - 1] || "").trim().toLowerCase();
+    if (rowEmail === emailLower) {
+      sheet.getRange(i + 2, PARTICIPANT_COLS.active).setValue(true);
+      return;
+    }
+  }
+  throw new Error("Participant not found.");
+}
+
+/**
+ * Returns all upcoming scheduled 1:1s for a given email address.
+ * Queries the Schedule Log for future meetings where this person is either p1 or p2.
+ *
+ * @param {string} email
+ * @returns {Object[]}
+ */
+function getUpcoming1on1sForEmail(email) {
+  const sheet = getOrCreateLogSheet();
+  const [, ...rows] = sheet.getDataRange().getValues();
+  const now        = new Date();
+  const emailLower = email.toLowerCase().trim();
+
+  return rows
+    .filter(row => {
+      const [, , , p1Email, p2Email, scheduledTime, eventId, status] = row;
+      if (status !== "scheduled") return false;
+      if (!eventId || eventId === "—") return false;
+      const p1 = String(p1Email || "").trim().toLowerCase();
+      const p2 = String(p2Email || "").trim().toLowerCase();
+      if (p1 !== emailLower && p2 !== emailLower) return false;
+      const t = scheduledTime instanceof Date ? scheduledTime : new Date(scheduledTime);
+      return !isNaN(t.getTime()) && t > now;
+    })
+    .map(row => {
+      const [, round, pair, p1Email, p2Email, scheduledTime, eventId] = row;
+      const p1Lower      = String(p1Email || "").trim().toLowerCase();
+      const partnerEmail = p1Lower === emailLower
+        ? String(p2Email || "").trim()
+        : String(p1Email || "").trim();
+      const t = scheduledTime instanceof Date ? scheduledTime : new Date(scheduledTime);
+      return {
+        round:         round,
+        pair:          String(pair || ""),
+        partnerEmail:  partnerEmail,
+        scheduledTime: t.toISOString(),
+        eventId:       String(eventId || ""),
+      };
+    })
+    .sort((a, b) => new Date(a.scheduledTime) - new Date(b.scheduledTime));
+}
+
+// ── Teams ─────────────────────────────────────────────────────
+
+/**
+ * Returns the list of team names from the Teams sheet.
+ *
+ * @returns {string[]}
+ */
+function getTeamsList() {
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_NAMES.teams);
+  if (!sheet) return [];
+  const [, ...rows] = sheet.getDataRange().getValues();
+  return rows.map(r => String(r[0] || "").trim()).filter(Boolean);
 }
 
 // ── Schedule Log ──────────────────────────────────────────────
@@ -167,10 +353,10 @@ function getUpcomingScheduledPairs() {
     if (!eventId || eventId === "—") return;
 
     const meetingTime = scheduledTime instanceof Date ? scheduledTime : new Date(scheduledTime);
-    if (isNaN(meetingTime.getTime()) || meetingTime <= now) return; // only future meetings
+    if (isNaN(meetingTime.getTime()) || meetingTime <= now) return;
 
     entries.push({
-      logRow:   i + 2, // 1-indexed; header = row 1, data starts at row 2
+      logRow:   i + 2,
       round,
       pairName: String(pair),
       p1Email:  String(p1Email).trim().toLowerCase(),
@@ -195,13 +381,17 @@ function updateLogEntryStatus(logRow, newStatus) {
 // ── One-time setup ────────────────────────────────────────────
 
 /**
- * Creates the Participants and Schedule Log sheets. Safe to re-run.
+ * Creates the Participants, Teams, and Schedule Log sheets. Safe to re-run.
  */
 function setupSheetHeaders() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   _setupParticipantsSheet(ss);
+  _setupTeamsSheet(ss);
   getOrCreateLogSheet();
-  ss.toast("Sheets are ready. Add colleagues or share the web app link.", "Setup Complete", 8);
+  ss.toast(
+    "Sheets are ready. Edit the Teams sheet first, then add colleagues or share the web app link.",
+    "Setup Complete", 10
+  );
 }
 
 function _setupParticipantsSheet(ss) {
@@ -209,13 +399,37 @@ function _setupParticipantsSheet(ss) {
   if (!sheet) sheet = ss.insertSheet(SHEET_NAMES.participants);
   if (sheet.getLastRow() > 0) return;
 
-  const headers = ["Name", "Email", "Active", "Preferred Days", "Preferred Start Hour", "Preferred End Hour"];
+  const headers = [
+    "Name", "Email", "Active",
+    "Preferred Days", "Preferred Start Hour", "Preferred End Hour",
+    "Team", "Cross Team Open", "Cross Team Targets", "Timezone",
+  ];
   sheet.appendRow(headers);
   sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
   sheet.setFrozenRows(1);
 
-  // Active checkbox (column C)
+  // Active checkbox (col C)
   sheet.getRange("C2:C100").setDataValidation(
     SpreadsheetApp.newDataValidation().requireCheckbox().build()
   );
+  // Cross Team Open checkbox (col H)
+  sheet.getRange("H2:H100").setDataValidation(
+    SpreadsheetApp.newDataValidation().requireCheckbox().build()
+  );
+}
+
+function _setupTeamsSheet(ss) {
+  let sheet = ss.getSheetByName(SHEET_NAMES.teams);
+  if (!sheet) sheet = ss.insertSheet(SHEET_NAMES.teams);
+  if (sheet.getLastRow() > 0) return;
+
+  sheet.appendRow(["Team"]);
+  sheet.getRange(1, 1).setFontWeight("bold");
+  sheet.setFrozenRows(1);
+
+  // Seed with example teams — edit these to match your org
+  sheet.appendRow(["Engineering"]);
+  sheet.appendRow(["Product"]);
+  sheet.appendRow(["Design"]);
+  Logger.log("Teams sheet created with example teams. Edit column A as needed.");
 }
