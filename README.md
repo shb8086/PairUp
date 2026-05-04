@@ -1,281 +1,106 @@
-# 1:1 Rotation Scheduler — Google Apps Script
+# 1:1 Rotation Scheduler
 
-Automatically schedules weekly 1:1 meetings between colleagues using a **round-robin rotation**. Each run pairs everyone up differently. Over a full cycle, every person meets every other person exactly once.
+**Stop manually organizing 1:1s. Let the robot handle it.**
 
-<img src="img/webapp_ui.png" alt="Web app sign-up form" width="400"/>
+A zero-infrastructure scheduling tool built on Google Apps Script. Drop it into any Google Sheet, share one link with your team, and every colleague gets a different 1:1 partner each week — automatically, with Calendar invites and Meet links.
+
+<img src="img/webapp_ui.png" alt="Web app sign-up form" width="420"/>
+
+→ **[Setup guide](SETUP.md)** — get running in ~15 minutes.
 
 ---
 
-## How the Rotation Works
+## Why teams use it
 
-With 4 colleagues A, B, C, D:
+**It removes the awkward math.** Who hasn't met whom? Who's already had their turn this cycle? The scheduler handles all of it — round-robin, fair, automatic.
+
+**No new tools to adopt.** It lives inside Google Workspace — the tools your team already uses. No Slack bots, no SaaS subscriptions, no data leaving your org.
+
+**People control their own schedule.** Each person sets their preferred days, time window, and timezone. The scheduler only proposes slots when *both* people are free.
+
+---
+
+## What you get
+
+### Self-service sign-up & dashboard
+
+Colleagues sign up via a clean web form — no admin needed. Each person gets:
+
+- **Preferred days & time window** — the scheduler respects individual availability
+- **Timezone support** — each person sets their own; intersections are computed correctly
+- **Team assignment** — stay within your team or opt in to cross-team meetings
+- **Pause / rejoin** — mark yourself inactive when on leave; rejoin with one click
+- **Personal dashboard** — view upcoming 1:1s, update preferences, leave or rejoin the rotation
+
+### Smart scheduling
+
+- Checks **real free/busy** from Google Calendar for both participants
+- Finds the **intersection** of preferences — only proposes times that work for both
+- Respects a **buffer window** — never schedules sooner than *N* days from now
+- **Skips pairs** already booked within the look-ahead window (no duplicates)
+- **Auto-reschedules** cancelled or declined meetings — finds a new slot and sends fresh invites
+
+### Fair round-robin rotation
+
+Every person meets every other person exactly once before the cycle repeats. With 4 people A, B, C, D:
 
 ```
-Round 1: A & B,  C & D
-Round 2: A & D,  B & C
-Round 3: A & C,  D & B
-→ repeats from Round 1
+Round 1: A & B  ·  C & D
+Round 2: A & D  ·  B & C
+Round 3: A & C  ·  D & B
+→ repeats
 ```
 
-- Each person gets **exactly one 1:1 per round**
-- **Odd number of people?** One person sits out per round, rotating fairly
-- The current round is remembered between runs and advances automatically
-- Use **"Reset Rotation to Round 1"** from the menu to restart the cycle
+- One meeting per person per round — no one gets double-booked
+- Odd number of people? One person sits out per round, rotating fairly
+- Round state is remembered; runs can be spaced however you like
+
+### Cross-team meetings
+
+Teams stay together by default. People who want more visibility across the org can opt in — they'll be paired with colleagues from other teams who are also open to it. Granular enough to choose *which* teams you're open to.
+
+### Runs itself
+
+Set a one-time weekly trigger (Monday 8 AM, one click) and the scheduler runs every week without any manual intervention. Full execution logs available in Apps Script.
+
+### Zero infrastructure cost
+
+Runs entirely within Google's free Apps Script quota. No servers, no databases, no monthly bill. The only requirement is a Google Workspace account.
 
 ---
 
-## File Structure
+## Security
 
-```text
-├── Code.gs             — Project index (comment only)
-├── Config.gs           — All configuration constants
-├── Menu.gs             — Custom spreadsheet menu
-├── Pairings.gs         — Round-robin algorithm + round state
-├── Scheduler.gs        — Main orchestration + cross-team pairing filter
-├── CalendarService.gs  — Free/busy checks and event creation
-├── SheetService.gs     — Sheet reads, writes, and setup (Participants + Teams + Log)
-├── Triggers.gs         — Time-based trigger management
-├── Utils.gs            — Date/time helpers
-├── Webapp.gs           — Web app routing + sign-up + dashboard server functions
-├── webapp.html         — Self-service sign-up form
-└── dashboard.html      — Personal dashboard (preferences, upcoming 1:1s, leave/rejoin)
-```
+Everything stays inside your Google Workspace org. There are no external accounts to create, no API keys to manage, and no third-party services that can access your data.
 
-> All `.gs` files share the same global scope in Apps Script — no imports needed. Files are separated by responsibility only.
+| What | How |
+| --- | --- |
+| **Authentication** | The dashboard uses Google's own session — identity is enforced by Google. No passwords are stored or managed by this tool. |
+| **Identity verification** | Preference updates and deactivation verify server-side that the session email matches the submitted email. You cannot modify someone else's record. |
+| **Access control** | Deploy the web app with **Access: Anyone in your organization** — only colleagues with a valid Workspace account can reach the sign-up form or dashboard. |
+| **Email domain restriction** | Optionally restrict sign-ups to a single domain (e.g. `@yourcompany.com`) so the form rejects addresses outside your org even if the URL leaks. |
+| **Data storage** | All data lives in a Google Sheet you own. Nothing is written to external databases or third-party services. |
+| **Calendar data** | Free/busy checks run through the Google Calendar API within your org. Calendar contents never leave Google's infrastructure. |
+| **Holiday data** | The only outbound request is to a public API (Nager.Date) to fetch national holiday dates by country — no personal data is included. |
+| **Script permissions** | The script runs as the owner (organizer of all events). Participants are never granted edit access to the Sheet or Script. |
 
 ---
 
-## Prerequisites
+## Participant responsibilities
 
-- A Google account with Google Calendar
-- Google Sheets + Apps Script access
-- Colleagues should be in the **same Google Workspace org** for accurate free/busy checking
+The scheduler automates the hard parts, but a few things are still on each person:
 
----
+**Keep your calendar up to date.** The scheduler reads your real free/busy from Google Calendar when finding open slots. If your calendar doesn't reflect your actual availability — blocked focus time, OOO, travel — you may get scheduled at a bad time.
 
-## Setup (~15 minutes, one-time)
+**Keep your preferences current.** If your working hours or preferred days change, update them via the dashboard. Stale preferences lead to slots that no longer work for you.
 
-### Step 1 — Create a Google Sheet
-
-Go to [sheets.google.com](https://sheets.google.com), create a blank spreadsheet, name it e.g. **"1:1 Scheduler"**.
+**Own your meetings.** If a scheduled 1:1 no longer works for you, reach out to your partner directly, cancel the invite for both parties, or reschedule.
 
 ---
 
-### Step 2 — Open Apps Script
-
-In your Sheet: **Extensions → Apps Script**
-
----
-
-### Step 3 — Add All Script Files
-
-For each `.gs` file in this project:
-1. Click **"+"** next to Files → **Script**
-2. Name it exactly as listed (e.g. `Config`, `Pairings`, `Scheduler`, etc.)
-3. Paste the file contents
-
-For `webapp.html`:
-1. Click **"+"** → **HTML**
-2. Name it `webapp`
-3. Paste the contents
-
-Replace the default content in `Code.gs` with the index comment from this project's `Code.gs`.
-
-The Files panel should show all 10 files when done.
-
----
-
-### Step 4 — Enable the Calendar Advanced Service
-
-Required for checking free/busy times for both people in each pair.
-
-1. In the Apps Script editor, click **Services** (`+` icon in left sidebar)
-2. Find **Google Calendar API** → **Add**
-
-> Without this, the script falls back to checking only the script owner's calendar.
-
----
-
-### Step 5 — Configure (optional)
-
-Open `Config.gs` and adjust as needed:
-
-```javascript
-const CFG = {
-  durationMins:            25,  // meeting length in minutes
-  scheduleMinDaysAhead:    7,   // never schedule sooner than this many days from now
-  searchDaysAhead:         14,  // scan up to this many days ahead (window = 7–14 days)
-  workStartHour:           10,  // default start hour (overridden by participant preferences)
-  workEndHour:             16,  // default end hour   (overridden by participant preferences)
-  slotIntervalMin:         30,  // scan every N minutes
-  skipIfMeetingWithinDays: 14,  // skip pair if they already have a 1:1 within this window
-  meetingTitle: "1:1 — {person1} & {person2}",
-};
-```
-
----
-
-### Step 6 — Run First-Time Setup
-
-In the Apps Script editor, select `setupSheetHeaders` → **Run**. Approve the authorization prompt.
-
-This creates the **Participants** and **Schedule Log** sheets.
-
----
-
-### Step 6.5 — Fill in the Teams sheet
-
-After setup, open the **Teams** tab and replace the example entries with your actual team names (one per row, column A). These populate the team dropdown in both web pages.
-
----
-
-### Step 7 — Add Colleagues (two ways)
-
-#### Option A — Web App (recommended, self-service)
-
-Two pages are served from the same deployment:
-
-| URL | Purpose |
-|---|---|
-| `<deployment-url>` | Sign-up form — join the rotation |
-| `<deployment-url>?page=dashboard` | Personal dashboard — view & edit preferences, see upcoming 1:1s |
-
-1. **Deploy → New deployment**
-2. Type: **Web app** | Execute as: **Me** | Access: **Anyone in your org**
-3. Share the sign-up URL with your team and the `?page=dashboard` URL for managing preferences
-
-On the **sign-up form**, colleagues fill in their name, preferred days/times, team, and whether they're open to cross-team meetings.
-
-On the **dashboard**, they can:
-- View and edit all their preferences
-- See upcoming scheduled 1:1s (dates in Berlin time)
-- Leave the rotation (deactivate) or rejoin at any time
-
-> The dashboard uses Google login automatically — no password or email input needed.
-
-> After any code change: **Deploy → Manage deployments → Edit → New version → Deploy**
-
-#### Option B — Add directly to the sheet
-
-Open the **Participants** tab and fill in rows:
-
-| Name | Email | Active | Preferred Days | Preferred Start Hour | Preferred End Hour | Team | Cross Team Open |
-|---|---|---|---|---|---|---|---|
-| Alice | alice@co.com | ✅ | Mon,Tue,Wed,Thu,Fri | 10 | 16 | Engineering | ☐ |
-| Bob | bob@co.com | ✅ | Mon,Wed,Fri | 9 | 15 | Product | ✅ |
-| Carol | carol@co.com | ✅ | Tue,Thu | 10 | 17 | Engineering | ✅ |
-
-- **Active**: uncheck to remove someone from the rotation without deleting them
-- **Preferred Days**: comma-separated abbreviations — `Mon`, `Tue`, `Wed`, `Thu`, `Fri`
-- **Preferred Start/End Hour**: 24-hour numbers (`10` = 10 AM, `16` = 4 PM)
-- **Team**: must match a name from the **Teams** sheet exactly
-- **Cross Team Open**: check to allow cross-team pairings (both people must have this checked)
-- If Preferred Days/Hours are blank, the global `CFG` defaults are used
-
----
-
-### Step 8 — Schedule
-
-Reload your Sheet. Use the **"1:1 Scheduler"** menu:
-
-| Menu Item | What it does |
-|---|---|
-| ▶ Schedule This Week's Pairs | Runs the current round and advances to next |
-| 🔍 Check & Reschedule Cancelled | Detects cancelled/declined meetings and reschedules them |
-| ⏰ Set Weekly Trigger (Mon 8 AM) | Automates scheduling every Monday at 8 AM |
-| 🗑 Remove All Triggers | Turns off automation |
-| 🔄 Reset Rotation to Round 1 | Restarts the cycle |
-| 📋 Setup Sheet Headers | Creates sheets (safe to re-run) |
-
----
-
-## How It Works
-
-### Scheduling a round
-
-```
-1. Read active participants from the sheet
-2. Generate all rounds using the round-robin algorithm
-3. Look up the current round (stored in Script Properties)
-4. For each pair in the current round:
-     a. Do they already have a 1:1 within the next 14 days? → skip
-     b. Find the intersection of their preferred days and hours
-     c. Scan for a free slot 7–14 days from now where BOTH are available
-     d. Create the Calendar event — both receive invites
-     e. Log the result to the Schedule Log tab
-5. Advance the round counter by 1
-```
-
-### Cancellation & reschedule check
-
-```
-1. Read the Schedule Log for upcoming meetings (status = "scheduled", date in future)
-2. For each entry, look up the Calendar event by ID:
-     - Event not found       → "cancelled" (organiser deleted it)
-     - A guest RSVP'd "No"  → "declined"
-     - Otherwise            → "ok", skip
-3. For cancelled/declined pairs:
-     a. Find both people in the active participants list
-     b. Find a new free slot using their preferences
-     c. Create a new Calendar event — both receive new invites
-     d. Update the old log row status (e.g. "cancelled — rescheduled")
-     e. Add a new log row for the rescheduled meeting
-```
-
----
-
-## Slot Finding (per pair)
-
-When finding a meeting time for a pair, the script uses the **intersection** of their preferences:
-
-- **Days**: only days both have marked as preferred
-- **Start time**: the later of the two start hours
-- **End time**: the earlier of the two end hours
-- If no overlap exists, the global CFG defaults are used as fallback
-
----
-
-## Schedule Log
-
-Every run appends rows to the **Schedule Log** tab:
-
-| Timestamp | Round | Pair | Person 1 Email | Person 2 Email | Scheduled Time | Event ID | Status |
-|---|---|---|---|---|---|---|---|
-| 2026-04-28 08:01 | 1 | Alice & Bob | alice@co.com | bob@co.com | Mon, Apr 28 at 10:00 AM | abc123 | scheduled |
-| 2026-04-28 08:01 | 1 | Carol & Dave | carol@co.com | dave@co.com | — | — | no free slot found |
-
----
-
-## Limitations
+## Known limitations
 
 | Limitation | Detail |
-|---|---|
+| --- | --- |
 | Free/busy accuracy | Calendar API only works within the same Google Workspace org. External participants fall back to checking the script owner's calendar only. |
-| Cancellation detection | Only detects events deleted by the script owner (organiser). If a participant removes it from their own calendar, it's not detected. |
-| Decline detection | Only detects explicit RSVP "No". "Maybe" or no response is treated as ok. |
-| Manual 1:1s not detected | The skip check only detects events that have both people as guests and "1:1" in the title. |
-| Participant changes mid-cycle | Adding/removing participants recalculates the rounds; the round index wraps with modulo, but pairing history may shift. |
-
----
-
-## Troubleshooting
-
-| Problem | Fix |
-|---|---|
-| Menu not showing | Reload the Sheet; or run `onOpen` from the Apps Script editor |
-| "No free slot found" | Increase `searchDaysAhead` in `Config.gs`, or widen preferred hours |
-| Free/busy not respected | Enable Google Calendar API (Step 4) |
-| Auth error on first run | Re-run any function in the editor and approve permissions |
-| Sheet not found | Run `setupSheetHeaders` from the editor |
-| Web app not saving to sheet | Check that `setupSheetHeaders` was run and the sheet exists |
-| Web app changes not live | Create a new deployment version |
-| Wrong timezone | Sheet → **File → Settings → Time zone** |
-| Want to restart the pairing cycle | Use **"Reset Rotation to Round 1"** from the menu |
-
----
-
-## Notes
-
-- The script runs as **whoever owns the Apps Script project**. They are the calendar event organiser — both pair members receive invites and show as required attendees.
-- Re-running is safe — the skip check prevents double-booking a pair.
-- All execution logs are in **Apps Script → Executions** (left sidebar).
+| Cancellation/Declined detection | Only detects events deleted by the script owner. If a participant removes it from their own calendar only or answer as No, Maybe, it is not detected. |

@@ -59,7 +59,7 @@ function getParticipants() {
       preferredEndHour:   Number(row[PARTICIPANT_COLS.preferredEndHour - 1])   || CFG.workEndHour,
       team:               String(row[PARTICIPANT_COLS.team - 1] || "").trim(),
       crossTeamOpen:      row[PARTICIPANT_COLS.crossTeamOpen - 1] === true,
-      crossTeamTargets:   String(row[PARTICIPANT_COLS.crossTeamTargets - 1] || "").trim(),
+      crossTeamTargets:   _normalizeCrossTeamTargets(row[PARTICIPANT_COLS.crossTeamTargets - 1]),
       timezone:           String(row[PARTICIPANT_COLS.timezone - 1] || "").trim(),
     });
   });
@@ -96,7 +96,7 @@ function lookupParticipantByEmail(email) {
         preferredEndHour:   Number(row[PARTICIPANT_COLS.preferredEndHour - 1])   || CFG.workEndHour,
         team:               String(row[PARTICIPANT_COLS.team - 1] || "").trim(),
         crossTeamOpen:      row[PARTICIPANT_COLS.crossTeamOpen - 1] === true,
-        crossTeamTargets:   String(row[PARTICIPANT_COLS.crossTeamTargets - 1] || "").trim(),
+        crossTeamTargets:   _normalizeCrossTeamTargets(row[PARTICIPANT_COLS.crossTeamTargets - 1]),
         timezone:           String(row[PARTICIPANT_COLS.timezone - 1] || "").trim(),
       };
     }
@@ -130,7 +130,7 @@ function upsertParticipant(data) {
       sheet.getRange(row, PARTICIPANT_COLS.preferredEndHour).setValue(data.preferredEndHour);
       sheet.getRange(row, PARTICIPANT_COLS.team).setValue(data.team || "");
       sheet.getRange(row, PARTICIPANT_COLS.crossTeamOpen).setValue(!!data.crossTeamOpen);
-      sheet.getRange(row, PARTICIPANT_COLS.crossTeamTargets).setValue(data.crossTeamTargets || "");
+      sheet.getRange(row, PARTICIPANT_COLS.crossTeamTargets).setValue(_crossTeamTargetsForSheet(data));
       sheet.getRange(row, PARTICIPANT_COLS.timezone).setValue(data.timezone || "");
       Logger.log(`Updated preferences for: ${data.email}`);
       return;
@@ -140,13 +140,13 @@ function upsertParticipant(data) {
   sheet.appendRow([
     data.name,
     data.email,
-    true,
+    data.active !== false,
     data.preferredDays,
     data.preferredStartHour,
     data.preferredEndHour,
     data.team || "",
     !!data.crossTeamOpen,
-    data.crossTeamTargets || "",
+    _crossTeamTargetsForSheet(data),
     data.timezone || "",
   ]);
   Logger.log(`Added new participant: ${data.email}`);
@@ -176,7 +176,7 @@ function updateParticipantFromDashboard(data) {
       sheet.getRange(row, PARTICIPANT_COLS.preferredEndHour).setValue(data.preferredEndHour);
       sheet.getRange(row, PARTICIPANT_COLS.team).setValue(data.team || "");
       sheet.getRange(row, PARTICIPANT_COLS.crossTeamOpen).setValue(!!data.crossTeamOpen);
-      sheet.getRange(row, PARTICIPANT_COLS.crossTeamTargets).setValue(data.crossTeamTargets || "");
+      sheet.getRange(row, PARTICIPANT_COLS.crossTeamTargets).setValue(_crossTeamTargetsForSheet(data));
       sheet.getRange(row, PARTICIPANT_COLS.timezone).setValue(data.timezone || "");
       Logger.log(`Dashboard update for: ${data.email}`);
       return;
@@ -378,6 +378,28 @@ function updateLogEntryStatus(logRow, newStatus) {
   getOrCreateLogSheet().getRange(logRow, 8).setValue(newStatus);
 }
 
+// ── Helpers ───────────────────────────────────────────────────
+
+/**
+ * Returns the value to store in the "Cross Team Targets" sheet column.
+ * Saves "ALL" when the person is open to every team (empty targets),
+ * so admins can see the intent rather than a blank cell.
+ * Empty string is still accepted on read and treated the same as "ALL".
+ */
+function _crossTeamTargetsForSheet(data) {
+  if (!data.crossTeamOpen) return "";
+  return (data.crossTeamTargets || "").trim() === "" ? "ALL" : data.crossTeamTargets;
+}
+
+/**
+ * Normalises the stored "Cross Team Targets" value back to an empty string
+ * when it is "ALL", so the scheduler and web form treat it as "open to everyone".
+ */
+function _normalizeCrossTeamTargets(raw) {
+  const val = String(raw || "").trim();
+  return val.toUpperCase() === "ALL" ? "" : val;
+}
+
 // ── One-time setup ────────────────────────────────────────────
 
 /**
@@ -407,15 +429,6 @@ function _setupParticipantsSheet(ss) {
   sheet.appendRow(headers);
   sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
   sheet.setFrozenRows(1);
-
-  // Active checkbox (col C)
-  sheet.getRange("C2:C100").setDataValidation(
-    SpreadsheetApp.newDataValidation().requireCheckbox().build()
-  );
-  // Cross Team Open checkbox (col H)
-  sheet.getRange("H2:H100").setDataValidation(
-    SpreadsheetApp.newDataValidation().requireCheckbox().build()
-  );
 }
 
 function _setupTeamsSheet(ss) {

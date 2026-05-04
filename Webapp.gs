@@ -44,9 +44,17 @@ function submitParticipant(data) {
   try {
     _validateParticipantData(data);
     upsertParticipant(data);
+    const isActive = data.active !== false;
+    if (isActive) {
+      reactivateParticipant(data.email.toLowerCase().trim());
+    } else {
+      deactivateParticipant(data.email.toLowerCase().trim());
+    }
     return {
       success: true,
-      message: "You're on the list! You'll receive a calendar invite when your 1:1 is scheduled.",
+      message: isActive
+        ? "You're on the list! You'll receive a calendar invite when your 1:1 is scheduled."
+        : "Preferences saved. You are currently inactive and won't be included in scheduling until you re-enable.",
     };
   } catch (e) {
     Logger.log(`submitParticipant error: ${e.message}`);
@@ -67,6 +75,28 @@ function getTeams() {
   } catch (e) {
     Logger.log("getTeams error: " + e.message);
     return [];
+  }
+}
+
+/**
+ * Looks up a participant by email without requiring a Google session.
+ * Used by the 2-step sign-up flow on webapp.html.
+ *
+ * @param {string} email
+ * @returns {{ found: boolean, profile?: Object, teams: string[], error?: string }}
+ */
+function getParticipantByEmail(email) {
+  try {
+    if (!email || !String(email).includes("@")) {
+      return { found: false, teams: [], error: "Invalid email address." };
+    }
+    const teams   = getTeamsList();
+    const profile = lookupParticipantByEmail(email.toLowerCase().trim());
+    if (!profile) return { found: false, teams: teams };
+    return { found: true, profile: profile, teams: teams };
+  } catch (e) {
+    Logger.log("getParticipantByEmail error: " + e.message);
+    return { found: false, teams: [], error: e.message };
   }
 }
 
@@ -167,6 +197,12 @@ function _validateParticipantData(data) {
   }
   if (!data.email || !String(data.email).includes("@")) {
     throw new Error("A valid email address is required.");
+  }
+  if (CFG.allowedEmailDomain) {
+    const domain = CFG.allowedEmailDomain.toLowerCase();
+    if (!String(data.email).toLowerCase().endsWith(domain)) {
+      throw new Error(`Please use your company email address (${domain}).`);
+    }
   }
   if (!data.preferredDays || String(data.preferredDays).trim() === "") {
     throw new Error("Please select at least one preferred day.");
