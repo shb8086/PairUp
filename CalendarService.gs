@@ -3,6 +3,19 @@
 // ============================================================
 
 /**
+ * Returns the calendar used for creating and reading scheduler events.
+ * Uses CFG.calendarId when set, otherwise falls back to the default calendar.
+ */
+function _getSchedulerCalendar() {
+  if (CFG.calendarId) {
+    const cal = CalendarApp.getCalendarById(CFG.calendarId);
+    if (cal) return cal;
+    Logger.log("calendarId not found — falling back to default calendar.");
+  }
+  return CalendarApp.getDefaultCalendar();
+}
+
+/**
  * Returns true if p1 and p2 already have a 1:1 together
  * on the script owner's calendar within the buffer window.
  *
@@ -14,7 +27,7 @@
 function pairHasRecentMeeting(p1Email, p2Email, bufferDays) {
   const now = new Date();
   const windowEnd = new Date(now.getTime() + bufferDays * 24 * 60 * 60 * 1000);
-  const events = CalendarApp.getDefaultCalendar().getEvents(now, windowEnd);
+  const events = _getSchedulerCalendar().getEvents(now, windowEnd);
 
   return events.some(event => {
     const guests = event.getGuestList().map(g => g.getEmail().toLowerCase());
@@ -91,7 +104,12 @@ function isSlotFree(emails, start, end) {
     });
 
     return emails.every(email => {
-      const busy = (response.calendars[email] || {}).busy || [];
+      const cal  = response.calendars[email] || {};
+      // If the API returned errors for this email (e.g. external/Gmail account whose
+      // calendar isn't visible to this Workspace), treat them as free so the pair
+      // isn't silently dropped. A manual check or the invite itself will catch conflicts.
+      if (cal.errors && cal.errors.length > 0) return true;
+      const busy = cal.busy || [];
       return busy.length === 0;
     });
 
@@ -115,7 +133,7 @@ function createMeetingEvent(p1, p2, slot) {
     .replace("{person1}", p1.name)
     .replace("{person2}", p2.name);
 
-  return CalendarApp.getDefaultCalendar().createEvent(title, slot.start, slot.end, {
+  return _getSchedulerCalendar().createEvent(title, slot.start, slot.end, {
     description: CFG.meetingDesc,
     guests:      `${p1.email},${p2.email}`,
     sendInvites: true,
@@ -137,7 +155,7 @@ function createMeetingEvent(p1, p2, slot) {
  */
 function getEventStatus(eventId, p1Email, p2Email) {
   try {
-    const event = CalendarApp.getDefaultCalendar().getEventById(eventId);
+    const event = _getSchedulerCalendar().getEventById(eventId);
     if (!event) return "cancelled";
 
     const declined = event.getGuestList().some(guest => {

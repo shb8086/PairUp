@@ -103,6 +103,52 @@
       padding: 2rem;
     }
 
+    /* ── Step 1 intro ───────────────────────────────────── */
+    .step-intro {
+      text-align: center;
+      margin-bottom: 1.75rem;
+    }
+
+    .step-intro h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.4rem;
+    }
+
+    .step-intro p {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+
+    /* ── Email row (step 2 header) ───────────────────────── */
+    .email-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.25rem 0 0.75rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .email-row strong { color: var(--text); }
+
+    .btn-text-link {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      flex-shrink: 0;
+      margin-left: 0.75rem;
+    }
+
     /* ── Form fields ─────────────────────────────────────── */
     .field { margin-bottom: 1.4rem; }
 
@@ -119,6 +165,13 @@
     }
 
     .field-label svg { color: var(--primary); flex-shrink: 0; }
+
+    .field-hint {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      margin-top: 0.35rem;
+      line-height: 1.4;
+    }
 
     input[type="text"],
     input[type="email"],
@@ -483,12 +536,44 @@
       </svg>
     </div>
     <h1>1:1 Rotation</h1>
-    <p>Sign up to join the weekly check-in rotation.<br>You'll be paired with a different colleague each week.</p>
+    <p>Join the weekly check-in rotation.<br>You'll be paired with a different colleague each week.</p>
   </header>
 
-  <!-- Form card -->
-  <main class="card" id="formCard">
-    <form id="form" novalidate>
+  <!-- Step 1: Email card -->
+  <main class="card" id="emailCard">
+    <div class="step-intro">
+      <h2>Get started</h2>
+      <p>Enter your work email to sign up or update your preferences.</p>
+    </div>
+    <form id="emailForm" novalidate>
+      <div class="field">
+        <div class="field-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Work Email
+        </div>
+        <input type="email" id="emailInput" placeholder="jane@company.com" required autocomplete="email">
+      </div>
+
+      <button type="submit" class="btn-submit" id="continueBtn">
+        <div class="spinner"></div>
+        <span class="btn-text">Continue →</span>
+      </button>
+
+      <div class="msg" id="emailMsg"></div>
+    </form>
+  </main>
+
+  <!-- Step 2: Options card (hidden until email is submitted) -->
+  <main class="card" id="optionsCard" style="display:none">
+
+    <div class="email-row">
+      <span>Signing in as <strong id="emailDisplay"></strong></span>
+      <button type="button" id="changeEmailBtn" class="btn-text-link">Change email</button>
+    </div>
+
+    <hr class="divider" style="margin-top:0">
+
+    <form id="optionsForm" novalidate>
 
       <div class="field">
         <div class="field-label">
@@ -496,14 +581,6 @@
           Full Name
         </div>
         <input type="text" id="name" placeholder="Jane Smith" required autocomplete="name">
-      </div>
-
-      <div class="field">
-        <div class="field-label">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          Work Email
-        </div>
-        <input type="email" id="email" placeholder="jane@company.com" required autocomplete="email">
       </div>
 
       <hr class="divider">
@@ -654,15 +731,29 @@
 
       <hr class="divider">
 
+      <div class="field">
+        <div class="field-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12"/><circle cx="12" cy="16" r="0.5" fill="currentColor"/></svg>
+          Participation Status
+        </div>
+        <label class="toggle-row">
+          <div class="toggle">
+            <input type="checkbox" id="isActive" checked>
+            <span class="toggle-slider"></span>
+          </div>
+          <span class="toggle-label">Active — include me in the 1:1 rotation</span>
+        </label>
+        <p class="field-hint">Uncheck to pause your participation. You can re-enable at any time.</p>
+      </div>
+
+      <hr class="divider">
+
       <button type="submit" class="btn-submit" id="submitBtn">
         <div class="spinner"></div>
-        <span class="btn-text">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-          Join the Rotation
-        </span>
+        <span class="btn-text" id="submitBtnText">Join the Rotation</span>
       </button>
 
-      <div class="msg" id="msg"></div>
+      <div class="msg" id="optionsMsg"></div>
 
     </form>
   </main>
@@ -675,8 +766,8 @@
           <polyline points="20 6 9 17 4 12"/>
         </svg>
       </div>
-      <h2>You're in!</h2>
-      <p id="successMsg">Your preferences have been saved. You'll receive a calendar invite when your first 1:1 is scheduled.</p>
+      <h2 id="successTitle">You're in!</h2>
+      <p id="successMsg">Your preferences have been saved.</p>
       <button class="btn-again" id="btnAgain">Update my preferences</button>
     </div>
   </main>
@@ -687,15 +778,15 @@
     // ── Time dropdowns ──────────────────────────────────────
     function fmtHour(h) {
       if (h === 0)  return '12:00 AM';
-      if (h < 12)   return `${h}:00 AM`;
+      if (h < 12)   return h + ':00 AM';
       if (h === 12) return '12:00 PM';
-      return `${h - 12}:00 PM`;
+      return (h - 12) + ':00 PM';
     }
 
     function buildSelect(id, selected) {
-      const el = document.getElementById(id);
-      for (let h = 7; h <= 20; h++) {
-        const o = document.createElement('option');
+      var el = document.getElementById(id);
+      for (var h = 7; h <= 20; h++) {
+        var o = document.createElement('option');
         o.value = h;
         o.textContent = fmtHour(h);
         if (h === selected) o.selected = true;
@@ -706,46 +797,23 @@
     buildSelect('startHour', 10);
     buildSelect('endHour',   16);
 
-    // Auto-detect the browser's timezone and pre-select it
-    (function() {
-      try {
-        var browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        var sel  = document.getElementById('timezone');
-        var opts = Array.from(sel.options);
-        var match = opts.find(function(o) { return o.value === browserTz; });
-        if (match) sel.value = browserTz;
-      } catch (e) {}
-    })();
+    // ── Day toggles ─────────────────────────────────────────
+    document.querySelectorAll('.day-btn').forEach(function(b) {
+      b.addEventListener('click', function() { b.classList.toggle('on'); });
+    });
 
-    // ── Load teams from server ───────────────────────────────
+    // ── Cross-team pills ─────────────────────────────────────
     var _allTeams = [];
 
-    google.script.run
-      .withSuccessHandler(function(teams) {
-        _allTeams = teams;
-        const sel = document.getElementById('team');
-        teams.forEach(function(t) {
-          const o = document.createElement('option');
-          o.value = t; o.textContent = t;
-          sel.appendChild(o);
-        });
-        rebuildPills();
-      })
-      .withFailureHandler(function() {
-        // Teams sheet unavailable — dropdown keeps "No team / not set" only
-      })
-      .getTeams();
-
-    function rebuildPills(selectedTargets) {
-      const ownTeam = document.getElementById('team').value;
-      const container = document.getElementById('teamPills');
+    function rebuildPills(ownTeam, selectedTargets) {
+      var container = document.getElementById('teamPills');
       container.innerHTML = '';
       _allTeams.forEach(function(t) {
-        if (t === ownTeam) return; // exclude own team
-        const checked = !selectedTargets || selectedTargets.length === 0 || selectedTargets.includes(t);
-        const lbl = document.createElement('label');
+        if (t === ownTeam) return;
+        var checked = !selectedTargets || selectedTargets.length === 0 || selectedTargets.indexOf(t) !== -1;
+        var lbl = document.createElement('label');
         lbl.className = 'team-pill' + (checked ? ' selected' : '');
-        const cb = document.createElement('input');
+        var cb = document.createElement('input');
         cb.type = 'checkbox'; cb.value = t; cb.className = 'team-target-cb';
         cb.checked = checked;
         cb.addEventListener('change', function() {
@@ -757,71 +825,194 @@
       });
     }
 
-    // Returns selected team targets as a comma-separated string.
-    // Empty string means "all teams" (stored when every available team is checked).
     function getCrossTeamTargets() {
-      const checked = [...document.querySelectorAll('.team-target-cb:checked')].map(c => c.value);
-      const all     = [...document.querySelectorAll('.team-target-cb')].map(c => c.value);
+      var checked = Array.from(document.querySelectorAll('.team-target-cb:checked')).map(function(c) { return c.value; });
+      var all     = Array.from(document.querySelectorAll('.team-target-cb')).map(function(c) { return c.value; });
       return checked.length === all.length ? '' : checked.join(',');
     }
 
-    // Rebuild pills when own team changes
     document.getElementById('team').addEventListener('change', function() {
-      rebuildPills();
+      rebuildPills(this.value, []);
     });
 
-    // Show/hide targets panel when toggle changes
     document.getElementById('crossTeamOpen').addEventListener('change', function() {
       document.getElementById('crossTeamTargetsWrap').style.display = this.checked ? 'block' : 'none';
     });
 
-    // ── Day toggles ─────────────────────────────────────────
-    document.querySelectorAll('.day-btn').forEach(b =>
-      b.addEventListener('click', () => b.classList.toggle('on'))
-    );
+    // ── Helpers ──────────────────────────────────────────────
+    function showMsg(id, text, type) {
+      var el = document.getElementById(id);
+      var icon = type === 'err'
+        ? '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
+        : '<polyline points="20 6 9 17 4 12"/>';
+      el.className = 'msg ' + type;
+      el.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px">' + icon + '</svg><span>' + text + '</span>';
+    }
 
-    // ── Form submit ─────────────────────────────────────────
-    document.getElementById('form').addEventListener('submit', function (e) {
+    function clearMsg(id) {
+      var el = document.getElementById(id);
+      el.className = 'msg';
+      el.innerHTML = '';
+    }
+
+    function resetOptionsForm() {
+      document.getElementById('name').value = '';
+      document.querySelectorAll('.day-btn').forEach(function(b) { b.classList.add('on'); });
+      document.getElementById('startHour').value = 10;
+      document.getElementById('endHour').value   = 16;
+      try {
+        var browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        var sel  = document.getElementById('timezone');
+        var match = Array.from(sel.options).find(function(o) { return o.value === browserTz; });
+        if (match) sel.value = browserTz;
+      } catch (e) {}
+      document.getElementById('team').value = '';
+      document.getElementById('isActive').checked = true;
+      document.getElementById('crossTeamOpen').checked = false;
+      document.getElementById('crossTeamTargetsWrap').style.display = 'none';
+      rebuildPills('', []);
+      document.getElementById('submitBtnText').textContent = 'Join the Rotation';
+    }
+
+    function prefillOptionsForm(p) {
+      document.getElementById('name').value = p.name || '';
+
+      var activeDays = p.preferredDays
+        ? p.preferredDays.split(',').map(function(d) { return d.trim(); })
+        : [];
+      document.querySelectorAll('.day-btn').forEach(function(b) {
+        if (activeDays.indexOf(b.dataset.day) !== -1) b.classList.add('on');
+        else b.classList.remove('on');
+      });
+
+      if (p.preferredStartHour) document.getElementById('startHour').value = p.preferredStartHour;
+      if (p.preferredEndHour)   document.getElementById('endHour').value   = p.preferredEndHour;
+
+      if (p.timezone) {
+        var tzSel = document.getElementById('timezone');
+        var match = Array.from(tzSel.options).find(function(o) { return o.value === p.timezone; });
+        if (match) tzSel.value = p.timezone;
+      }
+
+      if (p.team) document.getElementById('team').value = p.team;
+
+      document.getElementById('isActive').checked = p.active !== false;
+
+      document.getElementById('crossTeamOpen').checked = !!p.crossTeamOpen;
+      var savedTargets = p.crossTeamTargets
+        ? p.crossTeamTargets.split(',').map(function(t) { return t.trim(); }).filter(Boolean)
+        : [];
+      rebuildPills(p.team || '', savedTargets);
+      document.getElementById('crossTeamTargetsWrap').style.display = p.crossTeamOpen ? 'block' : 'none';
+
+      document.getElementById('submitBtnText').textContent = 'Update Preferences';
+    }
+
+    function populateTeamDropdown(teams, selectedTeam) {
+      var sel = document.getElementById('team');
+      while (sel.options.length > 1) sel.remove(1);
+      (teams || []).forEach(function(t) {
+        var o = document.createElement('option');
+        o.value = t; o.textContent = t;
+        if (t === selectedTeam) o.selected = true;
+        sel.appendChild(o);
+      });
+    }
+
+    // ── Step 1: Email form ───────────────────────────────────
+    document.getElementById('emailForm').addEventListener('submit', function(e) {
       e.preventDefault();
+      var email = document.getElementById('emailInput').value.trim();
+      if (!email.includes('@')) {
+        showMsg('emailMsg', 'Please enter a valid work email address.', 'err');
+        return;
+      }
 
-      const name  = document.getElementById('name').value.trim();
-      const email = document.getElementById('email').value.trim();
-
-      if (!name)                return showMsg('Please enter your full name.', 'err');
-      if (!email.includes('@')) return showMsg('Please enter a valid work email address.', 'err');
-
-      const days = [...document.querySelectorAll('.day-btn.on')].map(b => b.dataset.day);
-      if (days.length === 0)    return showMsg('Please select at least one preferred day.', 'err');
-
-      const start = parseInt(document.getElementById('startHour').value, 10);
-      const end   = parseInt(document.getElementById('endHour').value,   10);
-      if (start >= end)         return showMsg('"To" time must be later than "From" time.', 'err');
-
-      const btn = document.getElementById('submitBtn');
+      var btn = document.getElementById('continueBtn');
       btn.disabled = true;
       btn.classList.add('loading');
-      clearMsg();
+      clearMsg('emailMsg');
 
       google.script.run
-        .withSuccessHandler(function (r) {
+        .withSuccessHandler(function(data) {
+          btn.disabled = false;
+          btn.classList.remove('loading');
+
+          _allTeams = data.teams || [];
+          window._currentEmail = email;
+
+          if (data.error && !data.found) {
+            showMsg('emailMsg', 'Could not load your profile. Please try again.', 'err');
+            return;
+          }
+
+          if (data.found) {
+            populateTeamDropdown(data.teams, data.profile.team);
+            prefillOptionsForm(data.profile);
+          } else {
+            populateTeamDropdown(data.teams, '');
+            resetOptionsForm();
+          }
+
+          document.getElementById('emailDisplay').textContent = email;
+          document.getElementById('emailCard').style.display    = 'none';
+          document.getElementById('optionsCard').style.display  = 'block';
+          clearMsg('optionsMsg');
+        })
+        .withFailureHandler(function() {
+          btn.disabled = false;
+          btn.classList.remove('loading');
+          showMsg('emailMsg', 'Something went wrong. Please try again.', 'err');
+        })
+        .getParticipantByEmail(email);
+    });
+
+    // ── Change email link ────────────────────────────────────
+    document.getElementById('changeEmailBtn').addEventListener('click', function() {
+      document.getElementById('optionsCard').style.display = 'none';
+      document.getElementById('emailCard').style.display   = 'block';
+    });
+
+    // ── Step 2: Options form ─────────────────────────────────
+    document.getElementById('optionsForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      var name = document.getElementById('name').value.trim();
+      if (!name) { showMsg('optionsMsg', 'Please enter your full name.', 'err'); return; }
+
+      var days = Array.from(document.querySelectorAll('.day-btn.on')).map(function(b) { return b.dataset.day; });
+      if (days.length === 0) { showMsg('optionsMsg', 'Please select at least one preferred day.', 'err'); return; }
+
+      var start = parseInt(document.getElementById('startHour').value, 10);
+      var end   = parseInt(document.getElementById('endHour').value,   10);
+      if (start >= end) { showMsg('optionsMsg', '"To" time must be later than "From" time.', 'err'); return; }
+
+      var btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.classList.add('loading');
+      clearMsg('optionsMsg');
+
+      google.script.run
+        .withSuccessHandler(function(r) {
           btn.disabled = false;
           btn.classList.remove('loading');
           if (r.success) {
-            document.getElementById('successMsg').textContent = r.message;
-            document.getElementById('formCard').style.display    = 'none';
-            document.getElementById('successCard').style.display = 'block';
+            document.getElementById('successTitle').textContent = document.getElementById('isActive').checked ? "You're in!" : 'Preferences saved';
+            document.getElementById('successMsg').textContent   = r.message;
+            document.getElementById('optionsCard').style.display  = 'none';
+            document.getElementById('successCard').style.display  = 'block';
           } else {
-            showMsg(r.message, 'err');
+            showMsg('optionsMsg', r.message, 'err');
           }
         })
-        .withFailureHandler(function () {
+        .withFailureHandler(function() {
           btn.disabled = false;
           btn.classList.remove('loading');
-          showMsg('Something went wrong on our end. Please try again.', 'err');
+          showMsg('optionsMsg', 'Something went wrong on our end. Please try again.', 'err');
         })
         .submitParticipant({
-          name,
-          email,
+          name:               name,
+          email:              window._currentEmail,
           preferredDays:      days.join(','),
           preferredStartHour: start,
           preferredEndHour:   end,
@@ -829,27 +1020,16 @@
           team:               document.getElementById('team').value,
           crossTeamOpen:      document.getElementById('crossTeamOpen').checked,
           crossTeamTargets:   getCrossTeamTargets(),
+          active:             document.getElementById('isActive').checked,
         });
     });
 
-    // ── Back to form ────────────────────────────────────────
-    document.getElementById('btnAgain').addEventListener('click', function () {
-      document.getElementById('successCard').style.display = 'none';
-      document.getElementById('formCard').style.display    = 'block';
-      clearMsg();
+    // ── Back to form ─────────────────────────────────────────
+    document.getElementById('btnAgain').addEventListener('click', function() {
+      document.getElementById('successCard').style.display  = 'none';
+      document.getElementById('emailCard').style.display    = 'block';
+      clearMsg('emailMsg');
     });
-
-    function showMsg(text, type) {
-      const el = document.getElementById('msg');
-      el.className = 'msg ' + type;
-      el.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px">${type === 'err' ? '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>' : '<polyline points="20 6 9 17 4 12"/>'}</svg><span>${text}</span>`;
-    }
-
-    function clearMsg() {
-      const el = document.getElementById('msg');
-      el.className = 'msg';
-      el.innerHTML = '';
-    }
   </script>
 </body>
 </html>
