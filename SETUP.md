@@ -18,19 +18,21 @@ In your Sheet: **Extensions → Apps Script**
 
 ## Step 3 — Add the script files
 
-For each `.gs` file in this project:
+All files are in the `src/` folder of this repo.
+
+For each `.gs` file:
 
 1. Click **"+"** next to Files → **Script**
 2. Name it exactly as listed (e.g. `Config`, `Pairings`, `Scheduler`, etc.)
-3. Paste the file contents
+3. Paste the file contents from `src/<name>.gs`
 
 For `webapp.html` and `dashboard.html`:
 
 1. Click **"+"** → **HTML**
 2. Name it `webapp` (or `dashboard`)
-3. Paste the contents
+3. Paste the contents from `src/<name>.html`
 
-Replace the default content in `Code.gs` with the index comment from this project's `Code.gs`.
+Replace the default content in `Code.gs` with the index comment from `src/Code.gs`.
 
 The Files panel should show all 12 files when done.
 
@@ -159,7 +161,10 @@ Every run appends rows to the **Schedule Log** tab for full auditability:
 
 ## File structure
 
+All source files live in `src/`:
+
 ```text
+src/
 ├── Code.gs             — Project index
 ├── Config.gs           — All configuration constants (edit this one)
 ├── Menu.gs             — Custom spreadsheet menu
@@ -170,6 +175,7 @@ Every run appends rows to the **Schedule Log** tab for full auditability:
 ├── Triggers.gs         — Time-based trigger management
 ├── Utils.gs            — Date/time helpers
 ├── Webapp.gs           — Web app routing + server functions
+├── Holidays.gs         — Public holiday lookup
 ├── webapp.html         — Self-service sign-up form (2-step: email → preferences)
 └── dashboard.html      — Personal dashboard
 ```

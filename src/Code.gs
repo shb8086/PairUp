@@ -15,5 +15,6 @@
 //   Triggers.gs        — Time-based trigger management
 //   Utils.gs           — Pure date/time helpers
 //   Webapp.gs          — Web app entry point + form handler
+//   Holidays.gs        — Public holiday lookup (Nager.Date API)
 //   webapp.html        — Self-service sign-up form
 // ============================================================
